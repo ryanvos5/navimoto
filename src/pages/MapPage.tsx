@@ -7,7 +7,7 @@ import { formatCoords } from '@/lib/format';
 import { reverseGeocode, type GeoSearchResult } from '@/services/geocoding';
 import MapView, { type MapMarker, type MapPadding, type MapRouteLayer } from '@/components/MapView';
 import { PlaceSheet } from '@/components/map/ContextSheet';
-import { SHOP, SHOP_MARKER, SHOP_OVERLAYS } from '@/lib/shop';
+import { SHOP, SHOP_FOCUS_CENTER, SHOP_FOCUS_ZOOM, SHOP_MARKER, SHOP_OVERLAYS } from '@/lib/shop';
 import { LayerPicker } from '@/components/map/LayerPicker';
 import { LocateButton } from '@/components/map/LocateButton';
 import { PickBanner } from '@/components/map/PickBanner';
@@ -273,6 +273,12 @@ export default function MapPage({ active }: MapPageProps) {
       if (id !== SHOP.id) return;
       contextAbort.current?.abort();
       setResultSheetOpen(false);
+      setRideMenuOpen(false);
+      // Uitgezoomd: eerst naar het pand vliegen, zodat je de locatie echt ziet.
+      const map = mapRef.current;
+      if (map && map.getZoom() < SHOP_FOCUS_ZOOM - 0.5) {
+        map.flyTo({ center: [SHOP_FOCUS_CENTER.lon, SHOP_FOCUS_CENTER.lat], zoom: SHOP_FOCUS_ZOOM, duration: 1400 });
+      }
       setContext({ point: SHOP.position, label: `${SHOP.name} · ${SHOP.address}` });
     },
     [],

@@ -34,12 +34,16 @@ export const SHOP_OVERLAY = {
   minzoom: 14,
 };
 
-/** Logo-badge naast het pand (structureel gelijk aan MapMarker met kind 'shop'). */
+/** Logo-badge op het dak van de hal in de 3D-tekening (structureel gelijk aan MapMarker met kind 'shop'). */
 export const SHOP_MARKER = {
   id: SHOP.id,
-  position: { lat: SHOP_FOOTPRINT.north + 0.00004, lon: (SHOP_FOOTPRINT.west + SHOP_FOOTPRINT.east) / 2 } as LatLng,
+  position: { lat: 51.77427, lon: 5.55175 } as LatLng,
   kind: 'shop' as const,
   label: `${SHOP.name} – ${SHOP.address}`,
 };
+
+/** Zoomniveau waarop de kaart naar het pand vliegt als je op het logo tikt. */
+export const SHOP_FOCUS_ZOOM = 17.2;
+export const SHOP_FOCUS_CENTER: LatLng = { lat: 51.77430, lon: 5.55165 };
 
 export const SHOP_OVERLAYS = [SHOP_OVERLAY];
