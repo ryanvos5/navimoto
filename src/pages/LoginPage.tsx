@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/Button';
 import { Segmented, type SegmentedOption } from '@/components/ui/Segmented';
 import { TextField } from '@/components/ui/TextField';
 import { useAuth } from '@/store/useAuth';
-import { useToast } from '@/store/useToast';
 
 type Mode = 'login' | 'register';
 
@@ -50,7 +49,6 @@ export default function LoginPage() {
   const providerName = useAuth((s) => s.providerName);
   const signIn = useAuth((s) => s.signIn);
   const signUp = useAuth((s) => s.signUp);
-  const continueAsGuest = useAuth((s) => s.continueAsGuest);
   const clearError = useAuth((s) => s.clearError);
 
   const [mode, setMode] = useState<Mode>(stateMode === 'register' ? 'register' : 'login');
@@ -121,19 +119,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleGuest = async () => {
-    if (busy) return;
-    setBusy('guest');
-    try {
-      await continueAsGuest();
-      finishSignIn();
-    } catch (err) {
-      console.error('Doorgaan als gast is mislukt', err);
-      useToast.getState().show('Er is iets misgegaan. Probeer het opnieuw.', { type: 'error' });
-    } finally {
-      setBusy(null);
-    }
-  };
 
   const switchMode = (next: Mode) => {
     if (next === mode) return;
@@ -148,7 +133,7 @@ export default function LoginPage() {
         <main className="mx-auto my-auto flex w-full max-w-md flex-col gap-6 px-6 pb-8 pt-[calc(var(--safe-top)+40px)]">
           <div className="flex flex-col items-center gap-3 text-center">
             <Logo size={52} />
-            <p className="text-base text-muted">Navigatie voor motorrijders</p>
+            <p className="text-base text-muted">Navigatie voor motorrijders van Vos Oss</p>
           </div>
 
           <Segmented<Mode> ariaLabel="Inloggen of account aanmaken" value={mode} onChange={switchMode} options={MODE_OPTIONS} />
@@ -227,23 +212,16 @@ export default function LoginPage() {
               </div>
             )}
 
-            <Button type="submit" size="lg" block loading={busy === 'form'} disabled={busy === 'guest'}>
+            <Button type="submit" size="lg" block loading={busy === 'form'}>
               {isRegister ? 'Account aanmaken' : 'Inloggen'}
             </Button>
           </form>
 
-          <div className="flex items-center gap-3 text-sm text-muted" aria-hidden>
-            <span className="h-px flex-1 bg-line" />
-            of
-            <span className="h-px flex-1 bg-line" />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Button variant="ghost" size="lg" block onClick={() => void handleGuest()} loading={busy === 'guest'} disabled={busy === 'form'}>
-              Doorgaan als gast
-            </Button>
-            <p className="text-center text-sm text-muted">Je ritten worden alleen op dit apparaat bewaard.</p>
-          </div>
+          <p className="text-center text-sm text-muted">
+            {isRegister
+              ? 'Je Vos Oss-account werkt ook op vos-oss.nl. Na het aanmaken ontvang je een e-mail om je adres te bevestigen.'
+              : 'Log in met je Vos Oss-account. Nog geen account? Kies "Account aanmaken".'}
+          </p>
 
           {providerName === 'local' && (
             <p className="flex items-center justify-center gap-1.5 text-center text-xs text-muted">

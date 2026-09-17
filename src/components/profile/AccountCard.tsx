@@ -27,7 +27,7 @@ export function initialsOf(name: string, fallback = '?'): string {
 
 function providerLabel(user: AuthUser, providerName: AuthProviderName): string {
   if (user.isGuest) return 'Gast';
-  return providerName === 'supabase' ? 'Supabase-account' : 'Lokaal account';
+  return providerName === 'supabase' ? 'Vos Oss-account' : 'Lokaal account';
 }
 
 /** Accountkaart: avatar, naam (inline te bewerken), e-mail en accounttype; voor gasten een registratie-oproep. */

@@ -43,8 +43,9 @@ export const useAuth = create<AuthState>((set, get) => ({
   async init() {
     set({ status: 'loading', error: null, providerName: provider.name });
 
+    // Gastmodus bestaat alleen nog bij lokale accounts; met Vos Oss-accounts (Supabase) is inloggen verplicht.
     const guestFlag = await storageGet(GUEST_KEY);
-    if (guestFlag === '1') {
+    if (guestFlag === '1' && provider.name === 'local') {
       set({ user: GUEST_USER, status: 'signedIn' });
     } else {
       let user: AuthUser | null = null;
