@@ -147,7 +147,7 @@ export default function LoginPage() {
       <div className="flex min-h-full flex-col">
         <main className="mx-auto my-auto flex w-full max-w-md flex-col gap-6 px-6 pb-8 pt-[calc(var(--safe-top)+40px)]">
           <div className="flex flex-col items-center gap-3 text-center">
-            <Logo size={72} />
+            <Logo size={52} />
             <p className="text-base text-muted">Navigatie voor motorrijders</p>
           </div>
 
