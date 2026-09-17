@@ -25,11 +25,14 @@ export const SHOP_FOOTPRINT = {
 /** Overlay-definitie voor MapView: de tekening van het pand, meeschalend met de kaart. */
 export const SHOP_OVERLAY = {
   id: 'shop-vos-oss-pand',
-  url: SHOP.imageUrl,
-  /** Zuid-midden van de tekening (onderrand van het pand). */
-  anchor: { lat: 51.77400, lon: (SHOP_FOOTPRINT.west + SHOP_FOOTPRINT.east) / 2 } as LatLng,
-  /** Breedte van de tekening in meters (iets breder dan de plattegrond vanwege het 3D-perspectief). */
-  widthM: 92,
+  /** Gespiegelde tekening (ronde deel links) zodat hij na 90 graden draaien op de plattegrond past. */
+  url: `${SHOP.imageUrl}?v=3`,
+  /** Anker = midden van de oostgevel; de onderrand van de tekening komt na het draaien op de oostkant te liggen. */
+  anchor: { lat: 51.77437, lon: 5.55196 } as LatLng,
+  /** Breedte van de tekening in meters (= noord-zuidlengte van het pand na het draaien). */
+  widthM: 78,
+  /** 90 graden tegen de klok in: hal noord-zuid, ronde glaspartij aan de zuidkant, aanbouw noordwest. */
+  rotationDeg: -90,
   minzoom: 14,
 };
 

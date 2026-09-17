@@ -50,6 +50,8 @@ export interface MapImageOverlay {
   anchor: LatLng;
   /** Breedte in meters; de hoogte volgt uit de beeldverhouding. */
   widthM: number;
+  /** Draaiing met de klok mee (graden) rond het anker; 0 = onderrand naar het zuiden. */
+  rotationDeg?: number;
   minzoom?: number;
 }
 
@@ -387,6 +389,7 @@ export default function MapView(props: MapViewProps) {
       setReady(true);
       latest.current.onMapReady?.(map);
     });
+    if (import.meta.env.DEV) (window as unknown as { __navimotoMap?: MapLibreMap }).__navimotoMap = map; // debughulp in dev
 
     const onInteraction = (e: { originalEvent?: unknown }): void => {
       if (e.originalEvent) latest.current.onUserInteraction?.();
@@ -534,11 +537,19 @@ export default function MapView(props: MapViewProps) {
         const heightM = o.widthM * ratio;
         const latPerM = 1 / 111_320;
         const lonPerM = 1 / (111_320 * Math.cos((o.anchor.lat * Math.PI) / 180));
-        const west = o.anchor.lon - (o.widthM / 2) * lonPerM;
-        const east = o.anchor.lon + (o.widthM / 2) * lonPerM;
-        const south = o.anchor.lat;
-        const north = o.anchor.lat + heightM * latPerM;
-        map.addSource(id, { type: 'image', url: o.url, coordinates: [[west, north], [east, north], [east, south], [west, south]] });
+        // Hoeken in meters t.o.v. het anker (zuid-midden), gedraaid met de klok mee rond het anker.
+        const rot = ((o.rotationDeg ?? 0) * Math.PI) / 180;
+        const corner = (xM: number, yM: number): [number, number] => {
+          const rx = xM * Math.cos(rot) + yM * Math.sin(rot);
+          const ry = -xM * Math.sin(rot) + yM * Math.cos(rot);
+          return [o.anchor.lon + rx * lonPerM, o.anchor.lat + ry * latPerM];
+        };
+        const half = o.widthM / 2;
+        map.addSource(id, {
+          type: 'image',
+          url: o.url,
+          coordinates: [corner(-half, heightM), corner(half, heightM), corner(half, 0), corner(-half, 0)],
+        });
         const firstRoute = map.getStyle().layers.find((l) => l.id.startsWith('route-'))?.id;
         map.addLayer(
           { id, type: 'raster', source: id, minzoom: o.minzoom ?? 0, paint: { 'raster-fade-duration': 0, 'raster-resampling': 'linear' } },
