@@ -7,7 +7,7 @@ import { formatCoords } from '@/lib/format';
 import { reverseGeocode, type GeoSearchResult } from '@/services/geocoding';
 import MapView, { type MapMarker, type MapPadding, type MapRouteLayer } from '@/components/MapView';
 import { PlaceSheet } from '@/components/map/ContextSheet';
-import { SHOP, SHOP_MARKER } from '@/lib/shop';
+import { SHOP, SHOP_MARKER, SHOP_OVERLAYS } from '@/lib/shop';
 import { LayerPicker } from '@/components/map/LayerPicker';
 import { LocateButton } from '@/components/map/LocateButton';
 import { PickBanner } from '@/components/map/PickBanner';
@@ -296,6 +296,7 @@ export default function MapPage({ active }: MapPageProps) {
         initialZoom={INITIAL_ZOOM}
         routes={routes}
         markers={markers}
+        overlays={SHOP_OVERLAYS}
         fitTo={fitTo}
         fitPadding={PREVIEW_PADDING}
         userPosition={position}

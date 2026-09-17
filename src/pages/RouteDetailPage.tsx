@@ -1,4 +1,5 @@
 // Detail van een opgeslagen route (/ritten/route/:id): kaart, statistieken, rijden / exporteren / verwijderen.
+import { SHOP_OVERLAYS } from '@/lib/shop';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MapPinOff, Play } from 'lucide-react';
@@ -153,6 +154,7 @@ export default function RouteDetailPage() {
             mapStyle={profile?.mapStyle ?? 'osm'}
             routes={layers}
             markers={markers}
+            overlays={SHOP_OVERLAYS}
             fitTo={current.geometry}
             fitPadding={DETAIL_FIT_PADDING}
           />

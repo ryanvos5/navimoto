@@ -5,7 +5,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { LocateFixed } from 'lucide-react';
 import type { GeoPosition, LatLng, Maneuver, MapStyleId, RiddenTrack, RouteResult } from '@/types';
 import MapView from '@/components/MapView';
-import { SHOP_MARKER } from '@/lib/shop';
+import { SHOP_MARKER, SHOP_OVERLAYS } from '@/lib/shop';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { ArrivedBanner } from '@/components/nav/ArrivedBanner';
@@ -181,6 +181,7 @@ function ActiveRide({ ending, onEnd }: ActiveRideProps) {
         mapStyle={mapStyle}
         routes={routes}
         markers={markers}
+        overlays={SHOP_OVERLAYS}
         userPosition={position}
         userMarker="arrow"
         follow={follow}

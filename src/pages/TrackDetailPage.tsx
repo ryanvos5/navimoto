@@ -1,4 +1,5 @@
 // Detail van een gereden rit (/ritten/rit/:id): kaart, statistieken, nogmaals rijden / exporteren / verwijderen.
+import { SHOP_OVERLAYS } from '@/lib/shop';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MapPinOff, RotateCcw } from 'lucide-react';
@@ -166,6 +167,7 @@ export default function TrackDetailPage() {
             mapStyle={profile?.mapStyle ?? 'osm'}
             routes={layers}
             markers={markers}
+            overlays={SHOP_OVERLAYS}
             fitTo={current.points}
             fitPadding={DETAIL_FIT_PADDING}
           />

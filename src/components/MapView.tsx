@@ -42,12 +42,24 @@ export interface MapPadding {
   right: number;
 }
 
+/** Een afbeelding die met de kaart meeschaalt (bijv. de tekening van het pand van Vos Oss). */
+export interface MapImageOverlay {
+  id: string;
+  url: string;
+  /** Zuid-midden van de afbeelding op de kaart. */
+  anchor: LatLng;
+  /** Breedte in meters; de hoogte volgt uit de beeldverhouding. */
+  widthM: number;
+  minzoom?: number;
+}
+
 export interface MapViewProps {
   className?: string;
   mapStyle?: MapStyleId;
   initialCenter?: LatLng;
   initialZoom?: number;
   routes?: MapRouteLayer[];
+  overlays?: MapImageOverlay[];
   markers?: MapMarker[];
   /** Bij verandering (referentie) van een niet-lege lijst → fitBounds met padding. */
   fitTo?: LatLng[] | null;
@@ -238,17 +250,16 @@ export function createMarkerElement(kind: MapMarkerKind, viaNumber: number): HTM
   }
 }
 
-/** Het pand van Vos Oss Motoren: kaartje met foto en logo, met een puntje naar de locatie. */
+/** Logo-badge van Vos Oss Motoren: witte pil met het logo en een puntje naar het pand. */
 function createShopElement(): HTMLElement {
   const base = import.meta.env.BASE_URL;
   const el = document.createElement('div');
-  el.style.cssText = 'position:relative;width:104px;cursor:pointer;filter:drop-shadow(0 3px 6px rgba(0,0,0,.45));';
+  el.style.cssText = 'position:relative;width:96px;cursor:pointer;filter:drop-shadow(0 2px 5px rgba(0,0,0,.4));';
   el.innerHTML =
-    `<div style="width:104px;height:72px;border-radius:12px;overflow:hidden;background:#000;border:3px solid #fff;position:relative;">` +
-    `<img src="${base}brand/pand.png" alt="" draggable="false" style="width:100%;height:100%;object-fit:cover;display:block;">` +
-    `<img src="${base}brand/voss-logo.png" alt="Vos Oss Motoren" draggable="false" style="position:absolute;left:5px;bottom:4px;width:58px;height:auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,.7));">` +
+    `<div style="width:96px;height:44px;border-radius:12px;background:#fff;border:2px solid #e2131d;display:flex;align-items:center;justify-content:center;box-sizing:border-box;">` +
+    `<img src="${base}brand/voss-logo.png" alt="Vos Oss Motoren" draggable="false" style="width:80px;height:auto;display:block;">` +
     `</div>` +
-    `<div style="width:0;height:0;margin:-1px auto 0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:12px solid #fff;"></div>`;
+    `<div style="width:0;height:0;margin:-1px auto 0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:10px solid #e2131d;"></div>`;
   return el;
 }
 
@@ -266,7 +277,8 @@ interface UserElements {
 
 function createUserElements(): UserElements {
   const ground = document.createElement('div');
-  ground.style.cssText = 'position:relative;width:0;height:0;pointer-events:none;';
+  // Geen eigen `position`: MapLibre positioneert het markerelement zelf (absolute); de kinderen liggen daarop.
+  ground.style.cssText = 'width:0;height:0;pointer-events:none;';
   const halo = document.createElement('div');
   halo.style.cssText = `position:absolute;left:0;top:0;width:0;height:0;transform:translate(-50%,-50%);border-radius:9999px;background:rgba(59,130,246,.16);border:1px solid rgba(59,130,246,.35);`;
   const cone = document.createElement('div');
@@ -322,6 +334,7 @@ export default function MapView(props: MapViewProps) {
     className = '',
     mapStyle = 'osm',
     routes,
+    overlays,
     markers,
     fitTo,
     fitPadding,
@@ -497,6 +510,47 @@ export default function MapView(props: MapViewProps) {
     map.addSource(RASTER_SOURCE_ID, rasterSource(mapStyle));
     map.addLayer({ id: RASTER_LAYER_ID, type: 'raster', source: RASTER_SOURCE_ID }, firstOther);
   }, [mapStyle, ready]);
+
+  // --- Afbeeldingsoverlays (pand van Vos Oss) ---------------------------------------------------------
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    const wanted = overlays ?? [];
+    const wantedIds = new Set(wanted.map((o) => `overlay-${o.id}`));
+    for (const layer of map.getStyle().layers) {
+      if (layer.id.startsWith('overlay-') && !wantedIds.has(layer.id)) {
+        map.removeLayer(layer.id);
+        if (map.getSource(layer.id)) map.removeSource(layer.id);
+      }
+    }
+    let cancelled = false;
+    for (const o of wanted) {
+      const id = `overlay-${o.id}`;
+      if (map.getSource(id)) continue;
+      const img = new Image();
+      img.onload = () => {
+        if (cancelled || !mapRef.current || mapRef.current.getSource(id)) return;
+        const ratio = img.naturalHeight / img.naturalWidth;
+        const heightM = o.widthM * ratio;
+        const latPerM = 1 / 111_320;
+        const lonPerM = 1 / (111_320 * Math.cos((o.anchor.lat * Math.PI) / 180));
+        const west = o.anchor.lon - (o.widthM / 2) * lonPerM;
+        const east = o.anchor.lon + (o.widthM / 2) * lonPerM;
+        const south = o.anchor.lat;
+        const north = o.anchor.lat + heightM * latPerM;
+        map.addSource(id, { type: 'image', url: o.url, coordinates: [[west, north], [east, north], [east, south], [west, south]] });
+        const firstRoute = map.getStyle().layers.find((l) => l.id.startsWith('route-'))?.id;
+        map.addLayer(
+          { id, type: 'raster', source: id, minzoom: o.minzoom ?? 0, paint: { 'raster-fade-duration': 0, 'raster-resampling': 'linear' } },
+          firstRoute,
+        );
+      };
+      img.src = o.url;
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [overlays, ready, styleGen]);
 
   // --- Routes (diff op id) --------------------------------------------------------------------------
   useEffect(() => {
