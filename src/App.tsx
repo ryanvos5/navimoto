@@ -6,6 +6,7 @@ import { useRides } from '@/store/useRides';
 import { TabBar } from '@/components/TabBar';
 import { Spinner } from '@/components/ui/Spinner';
 import { ToastViewport } from '@/components/ui/Toast';
+import { InstallHint } from '@/components/InstallHint';
 
 // Alle pagina's hebben een default export.
 const MapPage = lazy(() => import('@/pages/MapPage'));
@@ -116,6 +117,7 @@ export default function App() {
           </Routes>
         </Suspense>
         <ToastViewport />
+        <InstallHint />
       </Bootstrap>
     </BrowserRouter>
   );
