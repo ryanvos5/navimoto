@@ -34,6 +34,7 @@ interface ProfileRow {
   voice_enabled: boolean;
   map_style: MapStyleId;
   simulate_rides: boolean;
+  home: Waypoint | null; // jsonb { lat, lon, name? } of null
   created_at: string;
   updated_at: string;
 }
@@ -83,9 +84,18 @@ export function profileToRow(p: UserProfile): ProfileRow {
     voice_enabled: p.voiceEnabled,
     map_style: p.mapStyle,
     simulate_rides: p.simulateRides,
+    home: p.home ?? null,
     created_at: toIso(p.createdAt),
     updated_at: toIso(p.updatedAt),
   };
+}
+
+/** Thuislocatie uit de jsonb-kolom; ontbrekend, null of ongeldig → null. */
+function rowToHome(value: unknown): Waypoint | null {
+  if (!value || typeof value !== 'object') return null;
+  const v = value as { lat?: unknown; lon?: unknown; name?: unknown };
+  if (typeof v.lat !== 'number' || typeof v.lon !== 'number' || !Number.isFinite(v.lat) || !Number.isFinite(v.lon)) return null;
+  return { lat: v.lat, lon: v.lon, ...(typeof v.name === 'string' ? { name: v.name } : {}) };
 }
 
 export function rowToProfile(r: ProfileRow): UserProfile {
@@ -99,6 +109,7 @@ export function rowToProfile(r: ProfileRow): UserProfile {
     voiceEnabled: r.voice_enabled ?? true,
     mapStyle: r.map_style ?? 'light',
     simulateRides: r.simulate_rides ?? false,
+    home: rowToHome(r.home),
     createdAt: fromIso(r.created_at, Date.now()),
     updatedAt: fromIso(r.updated_at, Date.now()),
   };

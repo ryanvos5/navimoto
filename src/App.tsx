@@ -13,6 +13,8 @@ const MapPage = lazy(() => import('@/pages/MapPage'));
 const RidesPage = lazy(() => import('@/pages/RidesPage'));
 const RouteDetailPage = lazy(() => import('@/pages/RouteDetailPage'));
 const TrackDetailPage = lazy(() => import('@/pages/TrackDetailPage'));
+const NewsPage = lazy(() => import('@/pages/NewsPage'));
+const NewsArticlePage = lazy(() => import('@/pages/NewsArticlePage'));
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const NavigationPage = lazy(() => import('@/pages/NavigationPage'));
@@ -110,6 +112,8 @@ export default function App() {
                 <Route path="/ritten" element={<RidesPage />} />
                 <Route path="/ritten/route/:id" element={<RouteDetailPage />} />
                 <Route path="/ritten/rit/:id" element={<TrackDetailPage />} />
+                <Route path="/nieuws" element={<NewsPage />} />
+                <Route path="/nieuws/:slug" element={<NewsArticlePage />} />
                 <Route path="/profiel" element={<ProfilePage />} />
               </Route>
             </Route>

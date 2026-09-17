@@ -1,9 +1,11 @@
 // Zoekbalk boven de kaart (Photon): debounce 350 ms, min. 2 tekens, AbortController per verzoek.
 // In een 'pick'-modus (start/bestemming/via) vult een keuze het betreffende plannerpunt.
+// Bij een leeg invoerveld met focus verschijnen de laatste gekozen resultaten ("Recent gezocht").
 import { useEffect, useRef, useState } from 'react';
-import { Search, X } from 'lucide-react';
+import { History, Search, X } from 'lucide-react';
 import type { LatLng } from '@/types';
 import { searchPlaces, type GeoSearchResult } from '@/services/geocoding';
+import { clearRecentSearches, loadRecentSearches, rememberSearch } from '@/lib/recentSearches';
 import { Spinner } from '@/components/ui/Spinner';
 
 export type SearchMode = 'free' | 'start' | 'destination' | 'via';
@@ -78,6 +80,7 @@ export function SearchBar({ mode, near, focusToken, onSelect, onCancelMode }: Se
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [recents, setRecents] = useState<GeoSearchResult[]>(() => loadRecentSearches());
   const nearRef = useRef(near);
   nearRef.current = near;
 
@@ -134,10 +137,17 @@ export function SearchBar({ mode, near, focusToken, onSelect, onCancelMode }: Se
     setResults([]);
     setQuery(mode === 'free' ? r.name : '');
     inputRef.current?.blur();
+    setRecents(rememberSearch(r));
     onSelect(r, mode);
   };
 
+  const clearRecents = (): void => {
+    clearRecentSearches();
+    setRecents([]);
+  };
+
   const showList = open && query.trim().length >= MIN_CHARS && (results.length > 0 || error !== null || !loading);
+  const showRecents = open && query.trim().length < MIN_CHARS && recents.length > 0;
   const placeholder = mode === 'free' ? 'Zoek een plaats of adres' : `${SEARCH_MODE_LABELS[mode]} zoeken…`;
 
   return (
@@ -169,7 +179,10 @@ export function SearchBar({ mode, near, focusToken, onSelect, onCancelMode }: Se
             setQuery(e.target.value);
             setOpen(true);
           }}
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            setRecents(loadRecentSearches());
+            setOpen(true);
+          }}
           onBlur={() => setOpen(false)}
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
@@ -191,6 +204,49 @@ export function SearchBar({ mode, near, focusToken, onSelect, onCancelMode }: Se
           )
         )}
       </div>
+
+      {showRecents && (
+        <div
+          // Voorkomt blur van het invoerveld vóór de klik geregistreerd is.
+          onPointerDown={(e) => e.preventDefault()}
+          className="absolute inset-x-0 top-full z-10 mt-2 max-h-72 overflow-y-auto rounded-2xl border border-line bg-surface-2 shadow-xl"
+        >
+          <div className="flex min-h-11 items-center justify-between border-b border-line px-4 py-1">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted">Recent gezocht</span>
+            <button
+              type="button"
+              onClick={clearRecents}
+              className="-mr-2 flex h-9 items-center rounded-full px-2 text-sm font-medium text-muted hover:bg-surface-3 hover:text-ink"
+              aria-label="Recente zoekopdrachten wissen"
+            >
+              Wissen
+            </button>
+          </div>
+          <div role="listbox" aria-label="Recente zoekopdrachten">
+            {recents.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                role="option"
+                aria-selected={false}
+                onClick={() => select(r)}
+                className="flex min-h-12 w-full items-center gap-3 border-b border-line px-4 py-2 text-left last:border-b-0 hover:bg-surface-3"
+              >
+                <History size={18} className="shrink-0 text-muted" aria-hidden />
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="flex w-full min-w-0 items-center gap-2">
+                    <span className="truncate font-medium">{r.name}</span>
+                    {placeTypeLabel(r.type) && (
+                      <span className="shrink-0 rounded-full bg-surface-4 px-2 py-0.5 text-xs text-muted">{placeTypeLabel(r.type)}</span>
+                    )}
+                  </span>
+                  {r.description && <span className="w-full truncate text-sm text-muted">{r.description}</span>}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {showList && (
         <div

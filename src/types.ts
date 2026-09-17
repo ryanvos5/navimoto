@@ -122,6 +122,7 @@ export interface UserProfile {
   voiceEnabled: boolean;
   mapStyle: MapStyleId;
   simulateRides: boolean; // demo-modus: rit simuleren i.p.v. echte GPS
+  home: Waypoint | null; // thuislocatie ("Mijn huis"); null = niet ingesteld
   createdAt: number;
   updatedAt: number;
 }
@@ -182,6 +183,7 @@ export function defaultProfile(user: AuthUser, now: number): UserProfile {
     voiceEnabled: true,
     mapStyle: 'light',
     simulateRides: false,
+    home: null,
     createdAt: now,
     updatedAt: now,
   };

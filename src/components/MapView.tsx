@@ -25,7 +25,7 @@ export interface MapRouteLayer {
   dashed?: boolean;
 }
 
-export type MapMarkerKind = 'start' | 'via' | 'end' | 'search' | 'poi' | 'shop';
+export type MapMarkerKind = 'start' | 'via' | 'end' | 'search' | 'poi' | 'shop' | 'home';
 
 export interface MapMarker {
   id: string;
@@ -211,6 +211,13 @@ function sameRouteStyle(a: MapRouteLayer, b: MapRouteLayer): boolean {
 // Marker-elementen
 // ---------------------------------------------------------------------------
 
+/** Lucide "house", wit, 18px – voor de thuismarker (kind 'home'). */
+const HOUSE_SVG =
+  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/>' +
+  '<path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>' +
+  '</svg>';
+
 const FLAG_SVG =
   '<svg width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-7.333-2A6 6 0 0 0 4 15"/></svg>';
 
@@ -249,6 +256,12 @@ export function createMarkerElement(kind: MapMarkerKind, viaNumber: number): HTM
       return circle(12, '#94a3b8', 2);
     case 'shop':
       return createShopElement();
+    case 'home': {
+      const el = circle(34, '#e2131d', 2);
+      el.style.cursor = 'pointer';
+      el.innerHTML = HOUSE_SVG;
+      return el;
+    }
   }
 }
 

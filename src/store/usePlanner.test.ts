@@ -50,6 +50,7 @@ function profile(patch: Partial<UserProfile> = {}): UserProfile {
     voiceEnabled: true,
     mapStyle: 'osm',
     simulateRides: false,
+    home: null,
     createdAt: 0,
     updatedAt: 0,
     ...patch,

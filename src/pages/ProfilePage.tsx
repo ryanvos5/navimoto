@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { AccountCard } from '@/components/profile/AccountCard';
+import { HomeSection } from '@/components/profile/HomeSection';
 import { RiderTypeCards } from '@/components/profile/RiderTypeCards';
 import { Section } from '@/components/profile/Section';
 import { StatsRow } from '@/components/profile/StatsRow';
@@ -123,6 +124,10 @@ export default function ProfilePage() {
 
       <Section title="Wat voor rijder ben je?">
         <RiderTypeCards value={profile.riderType} onChange={handleRiderType} />
+      </Section>
+
+      <Section title="Mijn huis">
+        <HomeSection home={profile.home} onSave={(home) => save({ home })} />
       </Section>
 
       <Section title="Standaard routevoorkeuren">

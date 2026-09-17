@@ -51,6 +51,8 @@ npm run build       # typecheck + vite build
 | `/ritten` | `pages/RidesPage` | opgeslagen routes + gereden ritten, GPX-import |
 | `/ritten/route/:id` | `pages/RouteDetailPage` | detail van een SavedRoute |
 | `/ritten/rit/:id` | `pages/TrackDetailPage` | detail van een RiddenTrack |
+| `/nieuws` | `pages/NewsPage` | nieuws van Vos Oss Motoren uit Supabase-tabel `nieuws_artikelen` (`services/news.ts`, 10 min cache) |
+| `/nieuws/:slug` | `pages/NewsArticlePage` | artikeldetail (gesaneerde HTML) + link naar `https://www.vos-oss.nl/nieuws/<slug>` |
 | `/profiel` | `pages/ProfilePage` | account + rijderstype + voorkeuren |
 | `/rijden` | `pages/NavigationPage` | fullscreen navigatie, zonder tabbalk; redirect naar `/kaart` als er geen actieve navigatie is |
 

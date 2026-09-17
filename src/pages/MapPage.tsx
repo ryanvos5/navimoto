@@ -31,9 +31,17 @@ const SEARCH_ZOOM = 14;
 /** Ruimte voor het voorbeeldpaneel onderaan en de zoekbalk bovenaan. */
 const PREVIEW_PADDING: MapPadding = { top: 120, bottom: 360, left: 40, right: 40 };
 
+const HOME_MARKER_ID = 'home';
+/** Naam van de bestemming bij 'Naar huis' (en in de routenaam "Huidige locatie → Thuis"). */
+const HOME_DESTINATION_NAME = 'Thuis';
+
 interface ContextPlace {
   point: LatLng;
   label: string;
+}
+
+function homeLabel(home: Waypoint): string {
+  return `Thuis · ${home.name || formatCoords(home)}`;
 }
 
 function samePoint(a: LatLng, b: LatLng): boolean {
@@ -60,6 +68,7 @@ export default function MapPage({ active }: MapPageProps) {
 
   const profile = useSettings((s) => s.profile);
   const mapStyle = profile?.mapStyle ?? 'osm';
+  const home = profile?.home ?? null;
   const position = useLocationStore((s) => s.position);
 
   const mode = usePlanner((s) => s.mode);
@@ -264,12 +273,22 @@ export default function MapPage({ active }: MapPageProps) {
       if (!samePoint(first, last)) out.push({ id: 'destination', position: last, kind: 'end', label: waypointLabel(last) });
     }
     if (searchResult) out.push({ id: 'search', position: searchResult.position, kind: 'search', label: searchResult.name });
+    if (home) out.push({ id: HOME_MARKER_ID, position: home, kind: 'home', label: homeLabel(home) });
     out.push(SHOP_MARKER);
     return out;
-  }, [planning, mode, start, vias, destination, resultWaypoints, previousMode, searchResult]);
+  }, [planning, mode, start, vias, destination, resultWaypoints, previousMode, searchResult, home]);
 
   const onMarkerClick = useCallback(
     (id: string): void => {
+      if (id === HOME_MARKER_ID) {
+        const h = useSettings.getState().profile?.home;
+        if (!h) return;
+        contextAbort.current?.abort();
+        setResultSheetOpen(false);
+        setRideMenuOpen(false);
+        setContext({ point: { lat: h.lat, lon: h.lon }, label: homeLabel(h) });
+        return;
+      }
       if (id !== SHOP.id) return;
       contextAbort.current?.abort();
       setResultSheetOpen(false);
@@ -283,6 +302,20 @@ export default function MapPage({ active }: MapPageProps) {
     },
     [],
   );
+
+  /** 'Naar huis' uit het Rijden-menu: planner openen, thuis als bestemming en meteen berekenen. */
+  const rideHome = useCallback((): void => {
+    const h = useSettings.getState().profile?.home;
+    setRideMenuOpen(false);
+    if (!h) return;
+    closePlaceSheets();
+    const s = planner();
+    s.openPlan();
+    s.setDestination({ lat: h.lat, lon: h.lon, name: HOME_DESTINATION_NAME });
+    // Start = huidige positie; zonder positie toont calculate() zelf de foutmelding (ERR_NO_LOCATION) en
+    // blijft het planformulier open zodat je een startpunt kunt kiezen.
+    void s.calculate();
+  }, [closePlaceSheets, planner]);
 
   const routes = useMemo<MapRouteLayer[]>(
     () => (mode === 'preview' && result ? [{ id: 'preview', geometry: result.geometry }] : []),
@@ -361,6 +394,8 @@ export default function MapPage({ active }: MapPageProps) {
           setRideMenuOpen(false);
           planner().openRoundTrip();
         }}
+        homeName={home?.name || (home ? formatCoords(home) : undefined)}
+        onHome={rideHome}
       />
 
       {sheetsVisible && <PlanRouteSheet open={mode === 'plan'} onSearch={startSearch} />}

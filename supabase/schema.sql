@@ -23,9 +23,13 @@ create table if not exists public.navimoto_profiles (
   voice_enabled  boolean not null default true,
   map_style      text not null default 'light' check (map_style in ('light', 'osm', 'topo', 'cyclosm')),
   simulate_rides boolean not null default false,
+  home           jsonb,                              -- thuislocatie { lat, lon, name? } of null (niet ingesteld)
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now()
 );
+
+-- Toegevoegd na de eerste migratie (kolom bestaat al in het Supabase-project):
+alter table public.navimoto_profiles add column if not exists home jsonb;
 
 -- ----------------------------------------------------------------------------
 -- navimoto_routes: geplande routes, rondritten en GPX-imports

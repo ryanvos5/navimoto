@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { Map, Route, User } from 'lucide-react';
+import { Map, Newspaper, Route, User } from 'lucide-react';
 
 const TABS = [
   { to: '/ritten', label: 'Ritten', Icon: Route },
   { to: '/kaart', label: 'Kaart', Icon: Map },
+  { to: '/nieuws', label: 'Nieuws', Icon: Newspaper },
   { to: '/profiel', label: 'Profiel', Icon: User },
 ] as const;
 
@@ -14,7 +15,7 @@ export function TabBar() {
       style={{ height: 'calc(var(--tabbar-height) + var(--safe-bottom))' }}
       aria-label="Hoofdnavigatie"
     >
-      <ul className="grid h-[var(--tabbar-height)] grid-cols-3">
+      <ul className="grid h-[var(--tabbar-height)] grid-cols-4">
         {TABS.map(({ to, label, Icon }) => (
           <li key={to} className="min-w-0">
             <NavLink
