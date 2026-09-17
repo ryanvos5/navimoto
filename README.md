@@ -145,9 +145,25 @@ Het script heeft geen afhankelijkheden en schrijft de PNG's rechtstreeks (eigen 
 - Offline kaarten (tegels downloaden per gebied).
 - Import van TomTom- en Garmin-routes.
 
+## Accounts en cloud-sync (Supabase)
+
+Navimoto gebruikt het Supabase-project van Vos Oss Motoren voor accounts (Supabase Auth) en voor de
+synchronisatie van profiel, routes en gereden ritten (tabellen `navimoto_profiles`, `navimoto_routes`,
+`navimoto_tracks`, zie `supabase/schema.sql`). De app blijft local-first: alles staat in IndexedDB en wordt
+op de achtergrond naar de cloud gespiegeld, zodat ritten op elk toestel beschikbaar zijn.
+
+Zet in `.env` (niet in git):
+
+```
+VITE_SUPABASE_URL=https://<project>.supabase.co
+VITE_SUPABASE_ANON_KEY=<publishable key>
+```
+
+Nieuwe accounts moeten hun e-mailadres bevestigen (instelling van het Supabase-project).
+
 ## Online zetten (GitHub Pages)
 
-De app draait op https://ryanvos5.github.io/navimoto/ (branch `gh-pages`). Opnieuw publiceren na wijzigingen:
+De app draait op https://ryanvos5.github.io/navimoto/ (branch `gh-pages`); met `DEPLOY_DOMAIN=navimoto.vos-oss.nl` in `.env` wordt gebouwd voor het eigen domein (basispad `/` + CNAME). Opnieuw publiceren na wijzigingen:
 
 ```bash
 npm run deploy

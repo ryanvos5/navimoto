@@ -3,6 +3,7 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import type { AuthUser } from '@/types';
 import { AuthError, type AuthProvider } from './types';
+import { getSupabaseClient } from '@/services/supabaseClient';
 
 const CONFIRM_EMAIL_MESSAGE = 'Controleer je e-mail om je account te bevestigen en log daarna in.';
 const EMAIL_NOT_CONFIRMED_MESSAGE = 'Bevestig eerst je e-mailadres via de link in je mailbox en log daarna in.';
@@ -68,9 +69,11 @@ export class SupabaseAuthProvider implements AuthProvider {
 
   private getClient(): Promise<SupabaseClient> {
     if (!this.clientPromise) {
-      this.clientPromise = import('@supabase/supabase-js').then(({ createClient }) =>
-        createClient(this.url, this.anonKey),
-      );
+      // Dezelfde client als de data-synchronisatie (services/cloud.ts), zodat RLS de ingelogde sessie ziet.
+      const shared = getSupabaseClient();
+      this.clientPromise =
+        shared ??
+        import('@supabase/supabase-js').then(({ createClient }) => createClient(this.url, this.anonKey));
     }
     return this.clientPromise;
   }

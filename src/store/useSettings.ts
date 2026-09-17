@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { db } from '@/services/db';
+import * as cloud from '@/services/cloud';
 import { defaultProfile, type AuthUser, type UserProfile } from '@/types';
 
 export interface SettingsState {
@@ -30,6 +31,22 @@ export const useSettings = create<SettingsState>((set, get) => ({
       }
     }
     set({ profile });
+
+    if (!cloud.cloudEnabledFor(user.id)) return;
+    try {
+      const remote = await cloud.pullProfile(user.id);
+      const current = get().profile;
+      if (!current || current.id !== user.id) return; // intussen uitgelogd
+      if (remote && remote.updatedAt > current.updatedAt) {
+        const merged: UserProfile = { ...remote, email: user.email || remote.email };
+        await db.profiles.put(merged);
+        set({ profile: merged });
+      } else if (!remote || current.updatedAt > remote.updatedAt) {
+        await cloud.pushProfile(current);
+      }
+    } catch (err) {
+      console.warn('Cloud-sync mislukt (profiel)', err);
+    }
   },
 
   async update(patch) {
@@ -47,6 +64,7 @@ export const useSettings = create<SettingsState>((set, get) => ({
     };
     set({ profile: next });
     await db.profiles.put(next);
+    if (cloud.cloudEnabledFor(next.id)) cloud.background('profiel opslaan', () => cloud.pushProfile(next));
   },
 
   clear() {
