@@ -3,7 +3,7 @@
 export type RiderType = 'street' | 'offroad' | 'allroad';
 export type RouteStyle = 'avontuurlijk' | 'bochtig' | 'snel';
 export type RouteKind = 'planned' | 'roundtrip' | 'gpx';
-export type MapStyleId = 'osm' | 'topo' | 'cyclosm';
+export type MapStyleId = 'light' | 'osm' | 'topo' | 'cyclosm';
 
 export interface AvoidOptions {
   ferries: boolean; // veerponten vermijden
@@ -165,6 +165,7 @@ export const AVOID_LABELS: Record<keyof AvoidOptions, string> = {
 };
 
 export const MAP_STYLE_LABELS: Record<MapStyleId, string> = {
+  light: 'Licht',
   osm: 'Standaard',
   topo: 'Topografisch',
   cyclosm: 'CyclOSM',
@@ -179,7 +180,7 @@ export function defaultProfile(user: AuthUser, now: number): UserProfile {
     defaultStyle: 'bochtig',
     defaultAvoid: { ...DEFAULT_AVOID },
     voiceEnabled: true,
-    mapStyle: 'osm',
+    mapStyle: 'light',
     simulateRides: false,
     createdAt: now,
     updatedAt: now,

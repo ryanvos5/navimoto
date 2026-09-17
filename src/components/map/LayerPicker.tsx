@@ -10,7 +10,7 @@ export interface LayerPickerProps {
   onChange: (style: MapStyleId) => void;
 }
 
-const STYLES: MapStyleId[] = ['osm', 'topo', 'cyclosm'];
+const STYLES: MapStyleId[] = ['light', 'osm', 'topo', 'cyclosm'];
 
 export function LayerPicker({ value, onChange }: LayerPickerProps) {
   const [open, setOpen] = useState(false);

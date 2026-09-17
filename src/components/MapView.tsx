@@ -72,25 +72,44 @@ export interface TileSource {
   tiles: string[];
   attribution: string;
   maxzoom: number;
+  /** 512 voor @2x-tiles (scherp op HiDPI-schermen), anders 256. */
+  tileSize: 256 | 512;
+  /** Vectorstijl (MapLibre style-JSON). Als gezet, worden `tiles` niet gebruikt. */
+  styleUrl?: string;
+}
+
+function isVectorStyle(style: MapStyleId): boolean {
+  return !!TILE_SOURCES[style].styleUrl;
 }
 
 const OSM_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bijdragers';
 
 export const TILE_SOURCES: Record<MapStyleId, TileSource> = {
+  light: {
+    // OpenFreeMap "Positron": lichtgrijze vectorkaart op OSM-data (resolutie-onafhankelijk, dus altijd scherp).
+    tiles: [],
+    styleUrl: 'https://tiles.openfreemap.org/styles/positron',
+    attribution: `${OSM_ATTRIBUTION} | <a href="https://openfreemap.org">OpenFreeMap</a>`,
+    maxzoom: 20,
+    tileSize: 512,
+  },
   osm: {
     tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
     attribution: OSM_ATTRIBUTION,
     maxzoom: 19,
+    tileSize: 256,
   },
   topo: {
     tiles: ['a', 'b', 'c'].map((s) => `https://${s}.tile.opentopomap.org/{z}/{x}/{y}.png`),
     attribution: `${OSM_ATTRIBUTION} | &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)`,
     maxzoom: 17,
+    tileSize: 256,
   },
   cyclosm: {
     tiles: ['a', 'b', 'c'].map((s) => `https://${s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png`),
     attribution: `${OSM_ATTRIBUTION} | <a href="https://www.cyclosm.org">CyclOSM</a>`,
     maxzoom: 20,
+    tileSize: 256,
   },
 };
 
@@ -115,10 +134,12 @@ const MAX_HALO_RADIUS_PX = 400;
 
 function rasterSource(style: MapStyleId): RasterSourceSpecification {
   const src = TILE_SOURCES[style];
-  return { type: 'raster', tiles: src.tiles, tileSize: 256, attribution: src.attribution, maxzoom: src.maxzoom };
+  return { type: 'raster', tiles: src.tiles, tileSize: src.tileSize, attribution: src.attribution, maxzoom: src.maxzoom };
 }
 
-function buildStyle(style: MapStyleId): StyleSpecification {
+function buildStyle(style: MapStyleId): string | StyleSpecification {
+  const url = TILE_SOURCES[style].styleUrl;
+  if (url) return url;
   return {
     version: 8,
     sources: { [RASTER_SOURCE_ID]: rasterSource(style) },
@@ -297,6 +318,8 @@ export default function MapView(props: MapViewProps) {
   const mapRef = useRef<MapLibreMap | null>(null);
   const [ready, setReady] = useState(false);
   const [rotated, setRotated] = useState(false);
+  /** Telt op na een volledige stijlwissel (vectorstijl), zodat routelagen opnieuw worden toegevoegd. */
+  const [styleGen, setStyleGen] = useState(0);
 
   // Nieuwste props/callbacks voor de MapLibre-handlers (die maar één keer worden geregistreerd).
   const latest = useRef(props);
@@ -441,7 +464,15 @@ export default function MapView(props: MapViewProps) {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready || appliedStyle.current === mapStyle) return;
+    const previous = appliedStyle.current;
     appliedStyle.current = mapStyle;
+    if (isVectorStyle(previous) || isVectorStyle(mapStyle)) {
+      // Vectorstijl: hele stijl vervangen; routes worden na 'style.load' opnieuw toegevoegd (styleGen).
+      appliedRoutes.current.clear();
+      map.once('style.load', () => setStyleGen((g) => g + 1));
+      map.setStyle(buildStyle(mapStyle));
+      return;
+    }
     const firstOther = map.getStyle().layers.find((l) => l.id !== RASTER_LAYER_ID)?.id;
     if (map.getLayer(RASTER_LAYER_ID)) map.removeLayer(RASTER_LAYER_ID);
     if (map.getSource(RASTER_SOURCE_ID)) map.removeSource(RASTER_SOURCE_ID);
@@ -484,7 +515,7 @@ export default function MapView(props: MapViewProps) {
       map.addLayer(layers.line);
       applied.set(id, r);
     }
-  }, [routes, ready]);
+  }, [routes, ready, styleGen]);
 
   // --- Markers (diff op id) -------------------------------------------------------------------------
   useEffect(() => {

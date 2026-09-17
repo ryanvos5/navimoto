@@ -27,7 +27,7 @@ import {
 
 const STYLE_ORDER: readonly RouteStyle[] = ['avontuurlijk', 'bochtig', 'snel'];
 const AVOID_ORDER: readonly (keyof AvoidOptions)[] = ['highways', 'tolls', 'ferries', 'unpaved'];
-const MAP_STYLE_ORDER: readonly MapStyleId[] = ['osm', 'topo', 'cyclosm'];
+const MAP_STYLE_ORDER: readonly MapStyleId[] = ['light', 'osm', 'topo', 'cyclosm'];
 const APP_VERSION = import.meta.env.VITE_APP_VERSION || '0.1.0';
 
 export default function ProfilePage() {

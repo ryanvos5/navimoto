@@ -33,7 +33,7 @@ describe('useSettings', () => {
       defaultStyle: 'bochtig',
       defaultAvoid: { ...DEFAULT_AVOID },
       voiceEnabled: true,
-      mapStyle: 'osm',
+      mapStyle: 'light',
       simulateRides: false,
       createdAt: 1000,
       updatedAt: 1000,

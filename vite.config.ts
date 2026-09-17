@@ -38,6 +38,11 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         runtimeCaching: [
           {
+            urlPattern: /^https:\/\/tiles\.openfreemap\.org\/.*/i,
+            handler: 'CacheFirst',
+            options: { cacheName: 'openfreemap', expiration: { maxEntries: 1500, maxAgeSeconds: 7 * 24 * 3600 } },
+          },
+          {
             urlPattern: /^https:\/\/([a-c]\.)?tile\.openstreetmap\.org\/.*/i,
             handler: 'CacheFirst',
             options: { cacheName: 'osm-tiles', expiration: { maxEntries: 1500, maxAgeSeconds: 7 * 24 * 3600 } },
