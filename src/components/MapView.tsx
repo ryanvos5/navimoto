@@ -53,7 +53,7 @@ export interface MapViewProps {
   fitTo?: LatLng[] | null;
   fitPadding?: MapPadding;
   userPosition?: GeoPosition | null;
-  /** 'dot' (standaard): blauwe stip met nauwkeurigheidscirkel; 'arrow': grote oranje navigatiepijl in de rijrichting. */
+  /** 'dot' (standaard): blauwe stip met nauwkeurigheidscirkel; 'arrow': grote rode navigatiepijl in de rijrichting. */
   userMarker?: 'dot' | 'arrow';
   /** Camera volgt userPosition (met koers en pitch). */
   follow?: boolean;
@@ -104,7 +104,7 @@ const FIT_DURATION_MS = 600;
 const FOLLOW_DURATION_MS = 900;
 const LONG_PRESS_MS = 500;
 const LONG_PRESS_MOVE_PX = 8;
-const DEFAULT_ROUTE_COLOR = '#f97316';
+const DEFAULT_ROUTE_COLOR = '#e2131d';
 const DEFAULT_ROUTE_WIDTH = 6;
 const CASING_COLOR = '#0b1220';
 const RASTER_SOURCE_ID = 'tiles';
@@ -193,7 +193,7 @@ export function createMarkerElement(kind: MapMarkerKind, viaNumber: number): HTM
     case 'start':
       return circle(22, '#22c55e', 3);
     case 'via': {
-      const el = circle(26, '#f97316', 2);
+      const el = circle(26, '#e2131d', 2);
       el.textContent = String(viaNumber);
       return el;
     }
@@ -205,7 +205,7 @@ export function createMarkerElement(kind: MapMarkerKind, viaNumber: number): HTM
     case 'search': {
       const el = document.createElement('div');
       el.style.cssText = 'width:32px;height:40px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5));';
-      el.innerHTML = pinSvg('#f97316');
+      el.innerHTML = pinSvg('#e2131d');
       return el;
     }
     case 'poi':
@@ -234,11 +234,11 @@ function createUserElements(): UserElements {
   cone.style.cssText = 'position:absolute;left:-40px;top:-40px;width:80px;height:80px;display:none;';
   cone.innerHTML =
     '<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="nm-cone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b82f6" stop-opacity="0"/><stop offset="1" stop-color="#3b82f6" stop-opacity=".55"/></linearGradient></defs><path d="M40 40 L20 6 A40 40 0 0 1 60 6 Z" fill="url(#nm-cone)"/></svg>';
-  // Navigatiepijl: oranje chevron met witte rand, wijst naar "boven" (= rijrichting na setRotation).
+  // Navigatiepijl: rode chevron met witte rand, wijst naar "boven" (= rijrichting na setRotation).
   const arrow = document.createElement('div');
   arrow.style.cssText = 'position:absolute;left:-32px;top:-32px;width:64px;height:64px;display:none;filter:drop-shadow(0 3px 6px rgba(0,0,0,.55));';
   arrow.innerHTML =
-    '<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path d="M32 6 L54 52 L32 41 L10 52 Z" fill="#f97316" stroke="#fff" stroke-width="4" stroke-linejoin="round"/></svg>';
+    '<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path d="M32 6 L54 52 L32 41 L10 52 Z" fill="#e2131d" stroke="#fff" stroke-width="4" stroke-linejoin="round"/></svg>';
   ground.append(halo, cone, arrow);
   const dot = document.createElement('div');
   dot.style.cssText = `width:18px;height:18px;border-radius:9999px;background:${USER_COLOR};border:3px solid #fff;box-shadow:0 0 0 2px rgba(59,130,246,.35),0 2px 6px rgba(0,0,0,.5);pointer-events:none;`;

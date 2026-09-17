@@ -4,7 +4,7 @@
 //   node scripts/gen-icons.mjs
 //
 // Het tekent dezelfde vormen als public/icons/icon.svg: een donker afgerond vierkant,
-// een oranje S-bocht (route) en een witte pijlpunt die naar rechtsboven wijst.
+// een rode S-bocht (route) en een witte pijlpunt die naar rechtsboven wijst.
 // Rasterisatie gebeurt met afstandsfuncties per (sub)pixel; PNG's worden met zlib
 // (deflateSync) en een eigen CRC32 geschreven (IHDR / IDAT / IEND, 8-bit RGBA, filter 0).
 
@@ -20,7 +20,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 export const DESIGN_SIZE = 512;
 export const COLORS = {
   background: [0x0b, 0x12, 0x20], // #0b1220
-  route: [0xf9, 0x73, 0x16], // #f97316
+  route: [0xf9, 0x73, 0x16], // #e2131d
   chevron: [0xff, 0xff, 0xff],
 };
 export const CORNER_RADIUS = 96;

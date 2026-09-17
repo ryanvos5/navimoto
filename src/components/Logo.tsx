@@ -6,7 +6,7 @@ export interface LogoProps {
 
 /**
  * Navimoto-logo: hetzelfde beeldmerk als public/icons/icon.svg (donker afgerond vierkant,
- * oranje S-bocht, witte pijlpunt naar rechtsboven), optioneel met het woordmerk "Navimoto".
+ * rode S-bocht, witte pijlpunt naar rechtsboven), optioneel met het woordmerk "Navimoto".
  */
 export function Logo({ size = 40, withWordmark = true }: LogoProps) {
   return (
@@ -26,7 +26,7 @@ export function Logo({ size = 40, withWordmark = true }: LogoProps) {
         <path
           d="M132 396 C132 236 136 246 256 246 C336 246 336 172 378 130"
           fill="none"
-          stroke="#f97316"
+          stroke="#e2131d"
           strokeWidth="58"
           strokeLinecap="round"
           strokeLinejoin="round"

@@ -3,9 +3,9 @@
 /* Navimoto thema (Tailwind v4: tokens hier, geen tailwind.config.js).
    Gebruik: bg-surface, bg-surface-2, text-ink, text-muted, bg-brand, text-brand, border-line ... */
 @theme {
-  --color-brand: #f97316;
-  --color-brand-strong: #ea580c;
-  --color-brand-soft: #fdba74;
+  --color-brand: #e2131d;
+  --color-brand-strong: #b30f17;
+  --color-brand-soft: #f58a90;
   --color-surface: #0b1220;
   --color-surface-2: #131c2e;
   --color-surface-3: #1e2a40;
@@ -16,7 +16,7 @@
   --color-success: #22c55e;
   --color-danger: #ef4444;
   --color-warning: #eab308;
-  --color-route: #f97316;
+  --color-route: #e2131d;
   --color-route-alt: #38bdf8;
   --color-track: #22c55e;
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
