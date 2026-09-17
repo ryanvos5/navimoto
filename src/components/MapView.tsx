@@ -25,7 +25,7 @@ export interface MapRouteLayer {
   dashed?: boolean;
 }
 
-export type MapMarkerKind = 'start' | 'via' | 'end' | 'search' | 'poi';
+export type MapMarkerKind = 'start' | 'via' | 'end' | 'search' | 'poi' | 'shop';
 
 export interface MapMarker {
   id: string;
@@ -63,6 +63,8 @@ export interface MapViewProps {
   /** ≥ 500 ms ingedrukt zonder beweging. */
   onLongPress?: (p: LatLng) => void;
   onMarkerDragEnd?: (id: string, p: LatLng) => void;
+  /** Tik op een marker (bijv. het pand van Vos Oss). */
+  onMarkerClick?: (id: string) => void;
   /** Pan/zoom/draai door de gebruiker (om follow uit te zetten). */
   onUserInteraction?: () => void;
   onMapReady?: (map: MapLibreMap) => void;
@@ -231,11 +233,27 @@ export function createMarkerElement(kind: MapMarkerKind, viaNumber: number): HTM
     }
     case 'poi':
       return circle(12, '#94a3b8', 2);
+    case 'shop':
+      return createShopElement();
   }
 }
 
+/** Het pand van Vos Oss Motoren: kaartje met foto en logo, met een puntje naar de locatie. */
+function createShopElement(): HTMLElement {
+  const base = import.meta.env.BASE_URL;
+  const el = document.createElement('div');
+  el.style.cssText = 'position:relative;width:104px;cursor:pointer;filter:drop-shadow(0 3px 6px rgba(0,0,0,.45));';
+  el.innerHTML =
+    `<div style="width:104px;height:72px;border-radius:12px;overflow:hidden;background:#000;border:3px solid #fff;position:relative;">` +
+    `<img src="${base}brand/pand.png" alt="" draggable="false" style="width:100%;height:100%;object-fit:cover;display:block;">` +
+    `<img src="${base}brand/voss-logo.png" alt="Vos Oss Motoren" draggable="false" style="position:absolute;left:5px;bottom:4px;width:58px;height:auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,.7));">` +
+    `</div>` +
+    `<div style="width:0;height:0;margin:-1px auto 0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:12px solid #fff;"></div>`;
+  return el;
+}
+
 function markerAnchor(kind: MapMarkerKind): 'center' | 'bottom' {
-  return kind === 'search' ? 'bottom' : 'center';
+  return kind === 'search' || kind === 'shop' ? 'bottom' : 'center';
 }
 
 interface UserElements {
@@ -549,6 +567,11 @@ export default function MapView(props: MapViewProps) {
       prev?.marker.remove();
       const element = createMarkerElement(data.kind, viaNumber);
       if (data.label) element.title = data.label;
+      element.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (dragging.current) return;
+        latest.current.onMarkerClick?.(id);
+      });
       const marker = new Marker({ element, anchor: markerAnchor(data.kind), draggable: !!data.draggable })
         .setLngLat(toLngLat(data.position))
         .addTo(map);

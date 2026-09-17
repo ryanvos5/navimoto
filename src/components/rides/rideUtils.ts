@@ -1,4 +1,5 @@
 // Kleine hulpfuncties en labels voor de Ritten-tab (lijst + detailpagina's).
+import { SHOP_MARKER } from '@/lib/shop';
 import {
   AVOID_LABELS,
   DEFAULT_AVOID,
@@ -55,7 +56,7 @@ export function errorMessage(e: unknown, fallback: string): string {
 export interface DetailMarker {
   id: string;
   position: LatLng;
-  kind: 'start' | 'via' | 'end';
+  kind: 'start' | 'via' | 'end' | 'shop';
   label?: string;
 }
 
@@ -70,12 +71,13 @@ function marker(id: string, w: Waypoint, kind: DetailMarker['kind']): DetailMark
  * beginpunt (rondrit), anders liggen twee markers over elkaar.
  */
 export function lineMarkers(anchors: Waypoint[]): DetailMarker[] {
-  if (anchors.length === 0) return [];
+  if (anchors.length === 0) return [SHOP_MARKER];
   const start = anchors[0];
   const end = anchors[anchors.length - 1];
   const out: DetailMarker[] = [marker('start', start, 'start')];
   anchors.slice(1, -1).forEach((w, i) => out.push(marker(`via-${i}`, w, 'via')));
   if (anchors.length > 1 && haversineM(start, end) >= 5) out.push(marker('end', end, 'end'));
+  out.push(SHOP_MARKER);
   return out;
 }
 

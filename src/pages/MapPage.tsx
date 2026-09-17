@@ -7,6 +7,7 @@ import { formatCoords } from '@/lib/format';
 import { reverseGeocode, type GeoSearchResult } from '@/services/geocoding';
 import MapView, { type MapMarker, type MapPadding, type MapRouteLayer } from '@/components/MapView';
 import { PlaceSheet } from '@/components/map/ContextSheet';
+import { SHOP, SHOP_MARKER } from '@/lib/shop';
 import { LayerPicker } from '@/components/map/LayerPicker';
 import { LocateButton } from '@/components/map/LocateButton';
 import { PickBanner } from '@/components/map/PickBanner';
@@ -263,8 +264,19 @@ export default function MapPage({ active }: MapPageProps) {
       if (!samePoint(first, last)) out.push({ id: 'destination', position: last, kind: 'end', label: waypointLabel(last) });
     }
     if (searchResult) out.push({ id: 'search', position: searchResult.position, kind: 'search', label: searchResult.name });
+    out.push(SHOP_MARKER);
     return out;
   }, [planning, mode, start, vias, destination, resultWaypoints, previousMode, searchResult]);
+
+  const onMarkerClick = useCallback(
+    (id: string): void => {
+      if (id !== SHOP.id) return;
+      contextAbort.current?.abort();
+      setResultSheetOpen(false);
+      setContext({ point: SHOP.position, label: `${SHOP.name} · ${SHOP.address}` });
+    },
+    [],
+  );
 
   const routes = useMemo<MapRouteLayer[]>(
     () => (mode === 'preview' && result ? [{ id: 'preview', geometry: result.geometry }] : []),
@@ -290,6 +302,7 @@ export default function MapPage({ active }: MapPageProps) {
         onClick={onMapClick}
         onLongPress={onLongPress}
         onMarkerDragEnd={onMarkerDragEnd}
+        onMarkerClick={onMarkerClick}
         onUserInteraction={onUserInteraction}
         onMapReady={onMapReady}
       />

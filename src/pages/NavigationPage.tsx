@@ -5,6 +5,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { LocateFixed } from 'lucide-react';
 import type { GeoPosition, LatLng, Maneuver, MapStyleId, RiddenTrack, RouteResult } from '@/types';
 import MapView from '@/components/MapView';
+import { SHOP_MARKER } from '@/lib/shop';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { ArrivedBanner } from '@/components/nav/ArrivedBanner';
@@ -26,7 +27,7 @@ const AFTER_RIDE_PATH = '/ritten?tab=gereden';
 interface RideMarker {
   id: string;
   position: LatLng;
-  kind: 'via' | 'end';
+  kind: 'via' | 'end' | 'shop';
   label?: string;
 }
 interface RideRouteLayer {
@@ -47,6 +48,7 @@ function buildMarkers(route: RouteResult | null, meta: RideMeta | null): RideMar
   if (end) {
     markers.push({ id: 'end', position: { lat: end.lat, lon: end.lon }, kind: 'end', ...(destination?.name ? { label: destination.name } : {}) });
   }
+  markers.push(SHOP_MARKER);
   return markers;
 }
 
