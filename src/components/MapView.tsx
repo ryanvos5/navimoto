@@ -53,6 +53,8 @@ export interface MapViewProps {
   fitTo?: LatLng[] | null;
   fitPadding?: MapPadding;
   userPosition?: GeoPosition | null;
+  /** 'dot' (standaard): blauwe stip met nauwkeurigheidscirkel; 'arrow': grote oranje navigatiepijl in de rijrichting. */
+  userMarker?: 'dot' | 'arrow';
   /** Camera volgt userPosition (met koers en pitch). */
   follow?: boolean;
   followZoom?: number;
@@ -216,9 +218,10 @@ function markerAnchor(kind: MapMarkerKind): 'center' | 'bottom' {
 }
 
 interface UserElements {
-  ground: HTMLDivElement; // halo + kegel (draait en kantelt mee met de kaart)
+  ground: HTMLDivElement; // halo + kegel + pijl (draait en kantelt mee met de kaart)
   halo: HTMLDivElement;
   cone: HTMLDivElement;
+  arrow: HTMLDivElement;
   dot: HTMLDivElement;
 }
 
@@ -231,10 +234,15 @@ function createUserElements(): UserElements {
   cone.style.cssText = 'position:absolute;left:-40px;top:-40px;width:80px;height:80px;display:none;';
   cone.innerHTML =
     '<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="nm-cone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b82f6" stop-opacity="0"/><stop offset="1" stop-color="#3b82f6" stop-opacity=".55"/></linearGradient></defs><path d="M40 40 L20 6 A40 40 0 0 1 60 6 Z" fill="url(#nm-cone)"/></svg>';
-  ground.append(halo, cone);
+  // Navigatiepijl: oranje chevron met witte rand, wijst naar "boven" (= rijrichting na setRotation).
+  const arrow = document.createElement('div');
+  arrow.style.cssText = 'position:absolute;left:-32px;top:-32px;width:64px;height:64px;display:none;filter:drop-shadow(0 3px 6px rgba(0,0,0,.55));';
+  arrow.innerHTML =
+    '<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path d="M32 6 L54 52 L32 41 L10 52 Z" fill="#f97316" stroke="#fff" stroke-width="4" stroke-linejoin="round"/></svg>';
+  ground.append(halo, cone, arrow);
   const dot = document.createElement('div');
   dot.style.cssText = `width:18px;height:18px;border-radius:9999px;background:${USER_COLOR};border:3px solid #fff;box-shadow:0 0 0 2px rgba(59,130,246,.35),0 2px 6px rgba(0,0,0,.5);pointer-events:none;`;
-  return { ground, halo, cone, dot };
+  return { ground, halo, cone, arrow, dot };
 }
 
 /** Straal in pixels van `accuracyM` rond `p` bij de huidige zoom/projectie. */
@@ -279,6 +287,7 @@ export default function MapView(props: MapViewProps) {
     fitTo,
     fitPadding,
     userPosition,
+    userMarker = 'dot',
     follow = false,
     followZoom,
     followPitch,
@@ -554,16 +563,19 @@ export default function MapView(props: MapViewProps) {
       u.ground.setLngLat(toLngLat(userPosition));
       u.dot.setLngLat(toLngLat(userPosition));
     }
+    const arrowMode = userMarker === 'arrow';
     const r = accuracyRadiusPx(map, userPosition, userPosition.accuracyM);
     u.els.halo.style.width = `${r * 2}px`;
     u.els.halo.style.height = `${r * 2}px`;
-    if (userPosition.headingDeg === null) {
-      u.els.cone.style.display = 'none';
-    } else {
-      u.els.cone.style.display = 'block';
-      u.ground.setRotation(userPosition.headingDeg);
-    }
-  }, [userPosition, ready]);
+    u.els.halo.style.display = arrowMode ? 'none' : 'block';
+    u.els.dot.style.display = arrowMode ? 'none' : 'block';
+    if (userPosition.headingDeg !== null) u.ground.setRotation(userPosition.headingDeg);
+    // Zonder koers: stip tonen (pijl zou een willekeurige richting suggereren).
+    const hasHeading = userPosition.headingDeg !== null;
+    u.els.cone.style.display = !arrowMode && hasHeading ? 'block' : 'none';
+    u.els.arrow.style.display = arrowMode && hasHeading ? 'block' : 'none';
+    if (arrowMode && !hasHeading) u.els.dot.style.display = 'block';
+  }, [userPosition, userMarker, ready]);
 
   // --- Volgmodus --------------------------------------------------------------------------------------
   useEffect(() => {

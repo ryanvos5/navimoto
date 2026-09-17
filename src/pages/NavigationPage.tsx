@@ -50,6 +50,11 @@ function buildMarkers(route: RouteResult | null, meta: RideMeta | null): RideMar
   return markers;
 }
 
+/** Van de route af: hele route tonen, zodat je ziet waar je weer op moet komen. */
+function progressOffRoute(progress: { offRoute: boolean } | null): boolean {
+  return progress?.offRoute ?? false;
+}
+
 function EndingScreen() {
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-surface">
@@ -138,7 +143,15 @@ function ActiveRide({ ending, onEnd }: ActiveRideProps) {
 
   const sim = useRideSimulation(simulating ? route : null, simulating);
 
-  const routes = useMemo<RideRouteLayer[]>(() => (route ? [{ id: 'ride', geometry: route.geometry }] : []), [route]);
+  // Alleen het stuk vóór je wordt getekend: het gereden deel (tot het snappunt) verdwijnt.
+  const snapIndex = progress?.snapIndex ?? null;
+  const snapPoint = progress?.snapPoint ?? null;
+  const routes = useMemo<RideRouteLayer[]>(() => {
+    if (!route) return [];
+    if (snapIndex === null || snapPoint === null || progressOffRoute(progress)) return [{ id: 'ride', geometry: route.geometry }];
+    const ahead = route.geometry.slice(snapIndex + 1);
+    return [{ id: 'ride', geometry: ahead.length > 0 ? [snapPoint, ...ahead] : [snapPoint] }];
+  }, [route, snapIndex, snapPoint, progress]);
   const markers = useMemo<RideMarker[]>(() => buildMarkers(route, meta), [route, meta]);
 
   const onUserInteraction = useCallback((): void => setFollow(false), []);
@@ -167,6 +180,7 @@ function ActiveRide({ ending, onEnd }: ActiveRideProps) {
         routes={routes}
         markers={markers}
         userPosition={position}
+        userMarker="arrow"
         follow={follow}
         followZoom={FOLLOW_ZOOM}
         followPitch={FOLLOW_PITCH}
