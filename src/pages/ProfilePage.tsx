@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { LogOut, RefreshCw } from 'lucide-react';
 import { Logo } from '@/components/Logo';
+import { clearAppCaches, reloadApp } from '@/lib/appUpdate';
 import { AccountCard } from '@/components/profile/AccountCard';
 import { HomeSection } from '@/components/profile/HomeSection';
 import { RiderTypeCards } from '@/components/profile/RiderTypeCards';
@@ -38,7 +39,7 @@ export default function ProfilePage() {
   const signOut = useAuth((s) => s.signOut);
   const profile = useSettings((s) => s.profile);
   const update = useSettings((s) => s.update);
-  const [pending, setPending] = useState<'signOut' | 'createAccount' | null>(null);
+  const [pending, setPending] = useState<'signOut' | 'createAccount' | 'update' | null>(null);
 
   /** Bewaart een profielwijziging (optimistisch via useSettings.update); geeft true terug als het gelukt is. */
   const save = useCallback(
@@ -82,6 +83,20 @@ export default function ProfilePage() {
 
   const setAvoid = (key: keyof AvoidOptions, checked: boolean) => {
     void save({ defaultAvoid: { ...profile.defaultAvoid, [key]: checked } });
+  };
+
+  const handleUpdate = async () => {
+    if (pending) return;
+    setPending('update');
+    try {
+      const { caches } = await clearAppCaches();
+      useToast.getState().show(caches > 0 ? 'Cache gewist, app wordt opnieuw geladen…' : 'App wordt opnieuw geladen…', { type: 'success' });
+      window.setTimeout(reloadApp, 600);
+    } catch (err) {
+      console.error('App bijwerken mislukt', err);
+      useToast.getState().show('Bijwerken mislukt. Probeer het opnieuw.', { type: 'error' });
+      setPending(null);
+    }
   };
 
   const handleSignOut = async () => {
@@ -218,13 +233,26 @@ export default function ProfilePage() {
       </Section>
 
       <Button
+        variant="secondary"
+        size="lg"
+        block
+        icon={<RefreshCw size={20} aria-hidden />}
+        onClick={() => void handleUpdate()}
+        loading={pending === 'update'}
+        disabled={pending !== null && pending !== 'update'}
+      >
+        App bijwerken
+      </Button>
+      <p className="-mt-2 text-center text-xs text-muted">Wist de opgeslagen app-bestanden en laadt de nieuwste versie.</p>
+
+      <Button
         variant="danger"
         size="lg"
         block
         icon={<LogOut size={20} aria-hidden />}
         onClick={() => void handleSignOut()}
         loading={pending === 'signOut'}
-        disabled={pending === 'createAccount'}
+        disabled={pending === 'createAccount' || pending === 'update'}
       >
         Uitloggen
       </Button>

@@ -8,7 +8,11 @@ import { useRides } from '@/store/useRides';
 import { useToast } from '@/store/useToast';
 import { errorMessage } from './rideUtils';
 
-export const GPX_ACCEPT = '.gpx,application/gpx+xml,text/xml,application/xml';
+/**
+ * Geen beperkend `accept`: iOS/Safari kent het GPX-type niet en grijst .gpx-bestanden dan uit in de
+ * bestandskiezer. We valideren het bestand zelf na het kiezen (parseGpx gooit een GpxError bij niet-GPX).
+ */
+export const GPX_ACCEPT = '*/*';
 
 export interface ImportGpxButtonProps {
   size?: ButtonSize;
