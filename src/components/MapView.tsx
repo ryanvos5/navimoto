@@ -256,12 +256,10 @@ export function createMarkerElement(kind: MapMarkerKind, viaNumber: number): HTM
 function createShopElement(): HTMLElement {
   const base = import.meta.env.BASE_URL;
   const el = document.createElement('div');
-  el.style.cssText = 'position:relative;width:96px;cursor:pointer;filter:drop-shadow(0 2px 5px rgba(0,0,0,.4));';
+  el.style.cssText = 'position:relative;width:104px;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45));';
   el.innerHTML =
-    `<div style="width:96px;height:44px;border-radius:12px;background:#fff;border:2px solid #e2131d;display:flex;align-items:center;justify-content:center;box-sizing:border-box;">` +
-    `<img src="${base}brand/voss-logo.png" alt="Vos Oss Motoren" draggable="false" style="width:80px;height:auto;display:block;">` +
-    `</div>` +
-    `<div style="width:0;height:0;margin:-1px auto 0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:10px solid #e2131d;"></div>`;
+    `<img src="${base}brand/voss-logo.png" alt="Vos Oss Motoren" draggable="false" style="width:104px;height:auto;display:block;">` +
+    `<div style="width:0;height:0;margin:2px auto 0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:10px solid #e2131d;"></div>`;
   return el;
 }
 
