@@ -10,7 +10,8 @@
     "preview": "vite preview --host",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "deploy": "node scripts/deploy-pages.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

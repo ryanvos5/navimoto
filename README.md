@@ -144,3 +144,13 @@ Het script heeft geen afhankelijkheden en schrijft de PNG's rechtstreeks (eigen 
 - Cloud-synchronisatie van routes en ritten via Supabase.
 - Offline kaarten (tegels downloaden per gebied).
 - Import van TomTom- en Garmin-routes.
+
+## Online zetten (GitHub Pages)
+
+De app draait op https://ryanvos5.github.io/navimoto/ (branch `gh-pages`). Opnieuw publiceren na wijzigingen:
+
+```bash
+npm run deploy
+```
+
+Dit bouwt de app met basispad `/navimoto/` en pusht de map `dist` naar `gh-pages`. Locatie (GPS) werkt alleen via HTTPS, dus test dit op je telefoon via de bovenstaande link.
