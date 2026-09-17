@@ -1,0 +1,81 @@
+@import 'tailwindcss';
+
+/* Navimoto thema (Tailwind v4: tokens hier, geen tailwind.config.js).
+   Gebruik: bg-surface, bg-surface-2, text-ink, text-muted, bg-brand, text-brand, border-line ... */
+@theme {
+  --color-brand: #f97316;
+  --color-brand-strong: #ea580c;
+  --color-brand-soft: #fdba74;
+  --color-surface: #0b1220;
+  --color-surface-2: #131c2e;
+  --color-surface-3: #1e2a40;
+  --color-surface-4: #2a3852;
+  --color-ink: #f1f5f9;
+  --color-muted: #94a3b8;
+  --color-line: #2a3852;
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+  --color-warning: #eab308;
+  --color-route: #f97316;
+  --color-route-alt: #38bdf8;
+  --color-track: #22c55e;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --radius-xl2: 1.25rem;
+}
+
+:root {
+  color-scheme: dark;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --tabbar-height: 64px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overscroll-behavior: none;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Hulpklassen die overal gebruikt mogen worden */
+.safe-top {
+  padding-top: var(--safe-top);
+}
+.safe-bottom {
+  padding-bottom: var(--safe-bottom);
+}
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* MapLibre overrides */
+.maplibregl-ctrl-attrib {
+  font-size: 10px;
+  background: rgba(11, 18, 32, 0.7) !important;
+  color: var(--color-muted);
+}
+.maplibregl-ctrl-attrib a {
+  color: var(--color-muted);
+}
+.maplibregl-canvas {
+  outline: none;
+}
+/* Een verborgen kaart (andere tab actief) mag ook zijn bedieningselementen niet tonen. */
+.invisible .maplibregl-ctrl,
+.invisible .maplibregl-ctrl * ,
+.invisible .maplibregl-marker {
+  visibility: hidden !important;
+}

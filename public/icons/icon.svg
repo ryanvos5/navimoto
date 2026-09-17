@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Navimoto">
+  <title>Navimoto</title>
+  <!-- Donkere afgeronde achtergrond -->
+  <rect width="512" height="512" rx="96" fill="#0b1220"/>
+  <!-- Route: S-bocht van linksonder naar rechtsboven (zelfde coördinaten als scripts/gen-icons.mjs) -->
+  <path d="M132 396 C132 236 136 246 256 246 C336 246 336 172 378 130" fill="none" stroke="#f97316" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Pijlpunt die naar rechtsboven wijst -->
+  <path d="M299 117 L391 117 L391 209" fill="none" stroke="#ffffff" stroke-width="50" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
