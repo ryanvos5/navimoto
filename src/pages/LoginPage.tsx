@@ -49,6 +49,13 @@ export default function LoginPage() {
   const notice = useAuth((s) => s.notice);
   // Terug van de bevestigingslink in de e-mail (?bevestigd=1): melding tonen en klaarzetten om in te loggen.
   const confirmed = new URLSearchParams(location.search).get('bevestigd') === '1';
+  // Supabase zet een mislukte bevestiging in de hash (#error_code=otp_expired ...): dan is de link verlopen of al gebruikt.
+  const linkError = new URLSearchParams(location.hash.replace(/^#/, '')).get('error_code');
+  const linkErrorText = linkError
+    ? linkError === 'otp_expired'
+      ? 'Deze bevestigingslink is verlopen of al gebruikt. Log in met je account, of maak het opnieuw aan om een nieuwe link te ontvangen.'
+      : 'De bevestigingslink kon niet worden verwerkt. Probeer in te loggen of maak je account opnieuw aan.'
+    : null;
   const providerName = useAuth((s) => s.providerName);
   const signIn = useAuth((s) => s.signIn);
   const signUp = useAuth((s) => s.signUp);
@@ -217,14 +224,14 @@ export default function LoginPage() {
               }
             />
 
-            {error && (
+            {(error || linkErrorText) && (
               <div role="alert" className="flex items-start gap-2 rounded-xl border border-danger/40 bg-danger/15 px-4 py-3 text-sm text-danger">
                 <AlertCircle size={18} className="mt-0.5 shrink-0" aria-hidden />
-                <span>{error}</span>
+                <span>{error ?? linkErrorText}</span>
               </div>
             )}
 
-            {!error && (notice || confirmed) && (
+            {!error && !linkErrorText && (notice || confirmed) && (
               <div role="status" className="flex items-start gap-3 rounded-xl border border-success/40 bg-success/15 px-4 py-3 text-sm text-ink">
                 <MailCheck size={20} className="mt-0.5 shrink-0 text-success" aria-hidden />
                 <span>
