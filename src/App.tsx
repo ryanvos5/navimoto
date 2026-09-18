@@ -46,6 +46,25 @@ function Bootstrap({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
+  // Opnieuw synchroniseren met het account als de app weer in beeld komt of de verbinding terugkeert
+  // (max. één keer per minuut), zodat ritten en instellingen van andere toestellen binnenkomen.
+  useEffect(() => {
+    if (!user || user.isGuest) return;
+    let last = Date.now();
+    const resync = (): void => {
+      if (document.visibilityState !== 'visible' || Date.now() - last < 60_000) return;
+      last = Date.now();
+      void useSettings.getState().load(user);
+      void useRides.getState().load(user.id);
+    };
+    document.addEventListener('visibilitychange', resync);
+    window.addEventListener('online', resync);
+    return () => {
+      document.removeEventListener('visibilitychange', resync);
+      window.removeEventListener('online', resync);
+    };
+  }, [user]);
+
   if (status === 'loading') return <FullScreenSpinner />;
   return <>{children}</>;
 }

@@ -12,40 +12,54 @@ export interface SettingsState {
   clear(): void;
 }
 
+/**
+ * E-mail volgt altijd het account; de weergavenaam alleen zolang het profiel nog geen naam heeft,
+ * zodat een via update({ displayName }) gewijzigde naam behouden blijft.
+ */
+function syncAccountFields(profile: UserProfile, user: AuthUser, now: number): UserProfile {
+  const displayName = profile.displayName.trim() ? profile.displayName : user.displayName;
+  const email = user.email || profile.email;
+  if (profile.email === email && profile.displayName === displayName) return profile;
+  return { ...profile, email, displayName, updatedAt: now };
+}
+
 export const useSettings = create<SettingsState>((set, get) => ({
   profile: null,
 
   async load(user) {
     const now = Date.now();
-    let profile = await db.profiles.get(user.id);
-    if (!profile) {
-      profile = defaultProfile(user, now);
-      await db.profiles.put(profile);
-    } else {
-      // E-mail volgt altijd het account. De weergavenaam alleen zolang het profiel er nog geen heeft:
-      // een via update({ displayName }) gewijzigde naam blijft zo behouden.
-      const displayName = profile.displayName.trim() ? profile.displayName : user.displayName;
-      if (profile.email !== user.email || profile.displayName !== displayName) {
-        profile = { ...profile, email: user.email, displayName, updatedAt: now };
-        await db.profiles.put(profile);
+    const local = await db.profiles.get(user.id);
+    // Lokaal profiel meteen tonen (of nog niets) en daarna afstemmen met de cloud.
+    if (local) set({ profile: syncAccountFields(local, user, now) });
+
+    let remote: UserProfile | null = null;
+    let cloudOk = false;
+    if (cloud.cloudEnabledFor(user.id)) {
+      try {
+        remote = await cloud.pullProfile(user.id);
+        cloudOk = true;
+      } catch (err) {
+        console.warn('Cloud-sync mislukt (profiel ophalen)', err);
       }
     }
+    if (get().profile && get().profile?.id !== user.id) return; // intussen als iemand anders ingelogd
+
+    // Keuze: nieuwste van lokaal en cloud. Zonder lokaal profiel wint de cloud altijd (nieuw toestel
+    // of na uitloggen): een vers standaardprofiel mag nooit de instellingen op het account overschrijven.
+    let profile: UserProfile;
+    if (local && remote) profile = remote.updatedAt > local.updatedAt ? remote : local;
+    else if (remote) profile = remote;
+    else if (local) profile = local;
+    else profile = defaultProfile(user, now);
+    profile = syncAccountFields(profile, user, now);
+
+    await db.profiles.put(profile);
     set({ profile });
 
-    if (!cloud.cloudEnabledFor(user.id)) return;
-    try {
-      const remote = await cloud.pullProfile(user.id);
-      const current = get().profile;
-      if (!current || current.id !== user.id) return; // intussen uitgelogd
-      if (remote && remote.updatedAt > current.updatedAt) {
-        const merged: UserProfile = { ...remote, email: user.email || remote.email };
-        await db.profiles.put(merged);
-        set({ profile: merged });
-      } else if (!remote || current.updatedAt > remote.updatedAt) {
-        await cloud.pushProfile(current);
-      }
-    } catch (err) {
-      console.warn('Cloud-sync mislukt (profiel)', err);
+    // Cloud bijwerken als die achterloopt (of nog niets heeft). Alleen als het ophalen lukte:
+    // anders zou een offline start de cloud kunnen overschrijven met verouderde data.
+    if (cloudOk && (!remote || profile.updatedAt > remote.updatedAt)) {
+      cloud.background('profiel opslaan', () => cloud.pushProfile(profile));
     }
   },
 
