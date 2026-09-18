@@ -102,7 +102,8 @@ export class SupabaseAuthProvider implements AuthProvider {
         email: email.trim(),
         password,
         options: {
-          data: { display_name: displayName.trim() || email.trim().split('@')[0], newsletter: options?.newsletter === true },
+          // `app: 'navimoto'` laat het beheer op vos-oss.nl zien dat dit account via de app is aangemaakt.
+          data: { display_name: displayName.trim() || email.trim().split('@')[0], newsletter: options?.newsletter === true, app: 'navimoto' },
           // Na het bevestigen terug naar Navimoto (niet naar de website). Moet in Supabase bij
           // Authentication > URL Configuration > Redirect URLs staan: https://navimoto.vos-oss.nl/**
           ...(redirectTo ? { emailRedirectTo: redirectTo } : {}),
