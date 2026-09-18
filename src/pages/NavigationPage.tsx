@@ -184,6 +184,7 @@ function ActiveRide({ ending, onEnd }: ActiveRideProps) {
         overlays={SHOP_OVERLAYS}
         userPosition={position}
         userMarker="arrow"
+        compassTop="calc(var(--safe-top) + 300px)"
         follow={follow}
         followZoom={FOLLOW_ZOOM}
         followPitch={FOLLOW_PITCH}

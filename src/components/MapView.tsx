@@ -82,6 +82,8 @@ export interface MapViewProps {
   /** Pan/zoom/draai door de gebruiker (om follow uit te zetten). */
   onUserInteraction?: () => void;
   onMapReady?: (map: MapLibreMap) => void;
+  /** CSS-positie (top) van de kompasknop; standaard onder de zoekbalk. Navigatie zet hem onder de manoeuvrebanner. */
+  compassTop?: string;
 }
 
 export interface TileSource {
@@ -353,6 +355,7 @@ export default function MapView(props: MapViewProps) {
     fitPadding,
     userPosition,
     userMarker = 'dot',
+    compassTop,
     follow = false,
     followZoom,
     followPitch,
@@ -755,7 +758,7 @@ export default function MapView(props: MapViewProps) {
           aria-label="Kaart naar het noorden draaien"
           title="Naar het noorden"
           className="absolute left-3 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface-2/90 text-ink shadow-md backdrop-blur"
-          style={{ top: 'calc(var(--safe-top) + 76px)' }}
+          style={{ top: compassTop ?? 'calc(var(--safe-top) + 76px)' }}
         >
           <Compass size={22} aria-hidden />
         </button>
