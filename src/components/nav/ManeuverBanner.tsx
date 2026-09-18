@@ -39,7 +39,7 @@ export function ManeuverBanner({ maneuver, distanceM, remainingKm, following, re
   const hasChips = rerouting || offRoute || simulating;
 
   return (
-    <section aria-label="Volgende manoeuvre" className="rounded-3xl border border-line/70 bg-surface-2/70 p-4 shadow-2xl backdrop-blur-md">
+    <section aria-label="Volgende manoeuvre" className="rounded-3xl border border-line/60 bg-surface-2/50 p-4 shadow-2xl backdrop-blur-md">
       <div className="flex items-center gap-4">
         <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-brand text-white shadow-lg shadow-brand/30">
           <ManeuverIcon name={icon} size={52} />
