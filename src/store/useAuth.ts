@@ -10,6 +10,8 @@ export interface AuthState {
   user: AuthUser | null;
   status: 'loading' | 'signedOut' | 'signedIn';
   error: string | null;
+  /** Neutrale melding (geen fout), bijv. "bevestig je e-mail". */
+  notice: string | null;
   providerName: AuthProviderName;
   init(): Promise<void>;
   signIn(email: string, password: string): Promise<void>;
@@ -38,6 +40,7 @@ export const useAuth = create<AuthState>((set, get) => ({
   user: null,
   status: 'loading',
   error: null,
+  notice: null,
   providerName: provider.name,
 
   async init() {
@@ -83,13 +86,14 @@ export const useAuth = create<AuthState>((set, get) => ({
   },
 
   async signUp(email, password, displayName) {
-    set({ error: null });
+    set({ error: null, notice: null });
     try {
       const user = await provider.signUp(email, password, displayName);
       await storageRemove(GUEST_KEY);
       set({ user, status: 'signedIn', error: null });
     } catch (err) {
-      set({ error: authErrorText(err) });
+      if (err instanceof AuthError && err.code === 'confirm_email') set({ notice: err.message, error: null });
+      else set({ error: authErrorText(err) });
     }
   },
 
@@ -112,7 +116,7 @@ export const useAuth = create<AuthState>((set, get) => ({
   },
 
   clearError() {
-    set({ error: null });
+    set({ error: null, notice: null });
   },
 }));
 
@@ -121,5 +125,5 @@ export function _setAuthProviderForTests(p: AuthProvider): void {
   unsubscribe?.();
   unsubscribe = null;
   provider = p;
-  useAuth.setState({ user: null, status: 'loading', error: null, providerName: p.name });
+  useAuth.setState({ user: null, status: 'loading', error: null, notice: null, providerName: p.name });
 }

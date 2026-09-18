@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { AlertCircle, Eye, EyeOff, Info, Lock, Mail, UserRound } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, Info, Lock, Mail, MailCheck, UserRound } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/Button';
 import { Segmented, type SegmentedOption } from '@/components/ui/Segmented';
@@ -46,6 +46,9 @@ export default function LoginPage() {
 
   const status = useAuth((s) => s.status);
   const error = useAuth((s) => s.error);
+  const notice = useAuth((s) => s.notice);
+  // Terug van de bevestigingslink in de e-mail (?bevestigd=1): melding tonen en klaarzetten om in te loggen.
+  const confirmed = new URLSearchParams(location.search).get('bevestigd') === '1';
   const providerName = useAuth((s) => s.providerName);
   const signIn = useAuth((s) => s.signIn);
   const signUp = useAuth((s) => s.signUp);
@@ -111,8 +114,17 @@ export default function LoginPage() {
     setBusy('form');
     try {
       // signIn/signUp gooien niet: bij een fout zetten ze `error` in de store (getoond in de alert hieronder).
-      if (isRegister) await signUp(email.trim(), password, name.trim());
-      else await signIn(email.trim(), password);
+      if (isRegister) {
+        await signUp(email.trim(), password, name.trim());
+        // E-mailbevestiging nodig: naar 'Inloggen' met het adres ingevuld, de melding blijft staan.
+        if (useAuth.getState().notice) {
+          setMode('login');
+          setPassword('');
+          setFieldErrors({});
+        }
+      } else {
+        await signIn(email.trim(), password);
+      }
       finishSignIn();
     } finally {
       setBusy(null);
@@ -209,6 +221,23 @@ export default function LoginPage() {
               <div role="alert" className="flex items-start gap-2 rounded-xl border border-danger/40 bg-danger/15 px-4 py-3 text-sm text-danger">
                 <AlertCircle size={18} className="mt-0.5 shrink-0" aria-hidden />
                 <span>{error}</span>
+              </div>
+            )}
+
+            {!error && (notice || confirmed) && (
+              <div role="status" className="flex items-start gap-3 rounded-xl border border-success/40 bg-success/15 px-4 py-3 text-sm text-ink">
+                <MailCheck size={20} className="mt-0.5 shrink-0 text-success" aria-hidden />
+                <span>
+                  {confirmed ? (
+                    <>
+                      <strong>E-mailadres bevestigd.</strong> Je kunt nu inloggen met je Vos Oss-account.
+                    </>
+                  ) : (
+                    <>
+                      <strong>Bijna klaar!</strong> {notice?.replace(/^Bijna klaar!\s*/, '')}
+                    </>
+                  )}
+                </span>
               </div>
             )}
 

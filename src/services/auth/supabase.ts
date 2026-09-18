@@ -5,8 +5,13 @@ import type { AuthUser } from '@/types';
 import { AuthError, type AuthProvider } from './types';
 import { getSupabaseClient } from '@/services/supabaseClient';
 
-const CONFIRM_EMAIL_MESSAGE = 'Controleer je e-mail om je account te bevestigen en log daarna in.';
 const EMAIL_NOT_CONFIRMED_MESSAGE = 'Bevestig eerst je e-mailadres via de link in je mailbox en log daarna in.';
+
+/** URL waar de bevestigingslink naartoe stuurt: de Navimoto-loginpagina (met melding). */
+export function confirmRedirectUrl(): string | null {
+  if (typeof window === 'undefined') return null;
+  return `${window.location.origin}${import.meta.env.BASE_URL}login?bevestigd=1`;
+}
 
 export function toAuthUser(user: User): AuthUser {
   const email = user.email ?? '';
@@ -92,17 +97,23 @@ export class SupabaseAuthProvider implements AuthProvider {
   async signUp(email: string, password: string, displayName: string): Promise<AuthUser> {
     try {
       const client = await this.getClient();
+      const redirectTo = confirmRedirectUrl();
       const { data, error } = await client.auth.signUp({
         email: email.trim(),
         password,
-        options: { data: { display_name: displayName.trim() || email.trim().split('@')[0] } },
+        options: {
+          data: { display_name: displayName.trim() || email.trim().split('@')[0] },
+          // Na het bevestigen terug naar Navimoto (niet naar de website). Moet in Supabase bij
+          // Authentication > URL Configuration > Redirect URLs staan: https://navimoto.vos-oss.nl/**
+          ...(redirectTo ? { emailRedirectTo: redirectTo } : {}),
+        },
       });
       if (error) throw mapSupabaseError(error);
       // Bij een bestaand adres geeft Supabase (met e-mailbevestiging aan) een "lege" gebruiker zonder identities terug.
       if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
         throw new AuthError('email_in_use');
       }
-      if (!data.session || !data.user) throw new AuthError('unknown', CONFIRM_EMAIL_MESSAGE);
+      if (!data.session || !data.user) throw new AuthError('confirm_email');
       return toAuthUser(data.user);
     } catch (err) {
       throw mapSupabaseError(err);
