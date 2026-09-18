@@ -2,7 +2,7 @@
 // Supabase-configuratie de bibliotheek niet laadt.
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import type { AuthUser } from '@/types';
-import { AuthError, type AuthProvider } from './types';
+import { AuthError, type AuthProvider, type SignUpOptions } from './types';
 import { getSupabaseClient } from '@/services/supabaseClient';
 
 const EMAIL_NOT_CONFIRMED_MESSAGE = 'Bevestig eerst je e-mailadres via de link in je mailbox en log daarna in.';
@@ -18,7 +18,7 @@ export function toAuthUser(user: User): AuthUser {
   const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
   const fromMeta = typeof meta.display_name === 'string' ? meta.display_name.trim() : '';
   const displayName = fromMeta || email.split('@')[0] || 'Rijder';
-  return { id: user.id, email, displayName, isGuest: false };
+  return { id: user.id, email, displayName, isGuest: false, newsletterOptIn: meta.newsletter === true };
 }
 
 /** Vertaalt een Supabase-/netwerkfout naar een AuthError. */
@@ -94,7 +94,7 @@ export class SupabaseAuthProvider implements AuthProvider {
     }
   }
 
-  async signUp(email: string, password: string, displayName: string): Promise<AuthUser> {
+  async signUp(email: string, password: string, displayName: string, options?: SignUpOptions): Promise<AuthUser> {
     try {
       const client = await this.getClient();
       const redirectTo = confirmRedirectUrl();
@@ -102,7 +102,7 @@ export class SupabaseAuthProvider implements AuthProvider {
         email: email.trim(),
         password,
         options: {
-          data: { display_name: displayName.trim() || email.trim().split('@')[0] },
+          data: { display_name: displayName.trim() || email.trim().split('@')[0], newsletter: options?.newsletter === true },
           // Na het bevestigen terug naar Navimoto (niet naar de website). Moet in Supabase bij
           // Authentication > URL Configuration > Redirect URLs staan: https://navimoto.vos-oss.nl/**
           ...(redirectTo ? { emailRedirectTo: redirectTo } : {}),

@@ -123,6 +123,8 @@ export interface UserProfile {
   mapStyle: MapStyleId;
   simulateRides: boolean; // demo-modus: rit simuleren i.p.v. echte GPS
   home: Waypoint | null; // thuislocatie ("Mijn huis"); null = niet ingesteld
+  newsletterOptIn: boolean; // wil de Vos Oss-nieuwsbrief (Brevo-lijst Klanten)
+  newsletterSyncedAt: number | null; // laatste keer dat de keuze naar Brevo is doorgezet
   createdAt: number;
   updatedAt: number;
 }
@@ -132,6 +134,8 @@ export interface AuthUser {
   email: string;
   displayName: string;
   isGuest: boolean;
+  /** Bij registratie aangevinkt: nieuwsbrief (uit de account-metadata). */
+  newsletterOptIn?: boolean;
 }
 
 export const STYLE_LABELS: Record<RouteStyle, string> = {
@@ -184,6 +188,8 @@ export function defaultProfile(user: AuthUser, now: number): UserProfile {
     mapStyle: 'light',
     simulateRides: false,
     home: null,
+    newsletterOptIn: user.newsletterOptIn === true,
+    newsletterSyncedAt: null,
     createdAt: now,
     updatedAt: now,
   };

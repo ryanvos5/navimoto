@@ -197,11 +197,17 @@ Fouten worden vertaald naar Nederlandse `error`-teksten; `signIn/signUp` gooien 
 
 ### `src/store/useSettings.ts`
 ```ts
-interface SettingsState { profile: UserProfile | null; load(user: AuthUser): Promise<void>; update(patch: Partial<UserProfile>): Promise<void>; clear(): void }
+interface SettingsState { profile: UserProfile | null; load(user: AuthUser): Promise<void>; update(patch: Partial<UserProfile>): Promise<void>; setNewsletter(optIn: boolean): Promise<void>; clear(): void }
 ```
-`load` maakt een profiel aan met `defaultProfile(user, Date.now())` als er nog geen is. Gastprofiel wordt ook bewaard (id 'guest').
+`load` toont eerst het lokale profiel, haalt daarna het cloudprofiel op en kiest het nieuwste; zonder lokaal profiel wint de cloud altijd
+(nieuw toestel / na uitloggen), en pas als beide ontbreken komt `defaultProfile(user, Date.now())`. Gastprofiel wordt ook bewaard (id 'guest').
 Bij een bestaand profiel wordt `email` gelijkgetrokken met het account; `displayName` wordt alleen gevuld als het profiel nog geen naam
 heeft, zodat een via `update({ displayName })` gewijzigde naam behouden blijft. Toon in de UI dus `profile.displayName`, niet `user.displayName`.
+
+**Nieuwsbrief (Brevo, lijst "Klanten" id 3):** vinkje bij registratie → `user_metadata.newsletter` → `AuthUser.newsletterOptIn`. Bij de eerste
+`load` met cloud en `!profile.newsletterSyncedAt` roept de store `services/newsletter.ts` aan (Edge Function `navimoto-newsletter`, bron in
+`supabase/functions/`, e-mail uit de JWT-sessie), daarna `newsletterOptIn/newsletterSyncedAt` in het profiel. `setNewsletter` (profieltoggle)
+meldt aan/af en gooit bij een fout. Vereist secret `BREVO_API_KEY` (optioneel `BREVO_LIST_ID`) in Supabase → Edge Functions → Secrets.
 
 ### `src/store/useRides.ts`
 ```ts

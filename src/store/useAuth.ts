@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { AuthUser } from '@/types';
 import { authProvider as defaultProvider, GUEST_USER } from '@/services/auth';
-import { AuthError, AUTH_ERROR_MESSAGES, type AuthProvider, type AuthProviderName } from '@/services/auth/types';
+import { AuthError, AUTH_ERROR_MESSAGES, type AuthProvider, type AuthProviderName, type SignUpOptions } from '@/services/auth/types';
 import { storageGet, storageRemove, storageSet } from '@/services/db';
 
 const GUEST_KEY = 'guest';
@@ -15,7 +15,7 @@ export interface AuthState {
   providerName: AuthProviderName;
   init(): Promise<void>;
   signIn(email: string, password: string): Promise<void>;
-  signUp(email: string, password: string, displayName: string): Promise<void>;
+  signUp(email: string, password: string, displayName: string, options?: SignUpOptions): Promise<void>;
   signOut(): Promise<void>;
   continueAsGuest(): Promise<void>;
   clearError(): void;
@@ -85,10 +85,10 @@ export const useAuth = create<AuthState>((set, get) => ({
     }
   },
 
-  async signUp(email, password, displayName) {
+  async signUp(email, password, displayName, options) {
     set({ error: null, notice: null });
     try {
-      const user = await provider.signUp(email, password, displayName);
+      const user = await provider.signUp(email, password, displayName, options);
       await storageRemove(GUEST_KEY);
       set({ user, status: 'signedIn', error: null });
     } catch (err) {

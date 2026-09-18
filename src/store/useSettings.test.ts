@@ -35,6 +35,8 @@ describe('useSettings', () => {
       voiceEnabled: true,
       mapStyle: 'light',
       simulateRides: false,
+      newsletterOptIn: false,
+      newsletterSyncedAt: null,
       home: null,
       createdAt: 1000,
       updatedAt: 1000,

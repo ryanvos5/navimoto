@@ -65,6 +65,7 @@ export default function LoginPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [newsletter, setNewsletter] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [busy, setBusy] = useState<'form' | 'guest' | null>(null);
@@ -122,7 +123,7 @@ export default function LoginPage() {
     try {
       // signIn/signUp gooien niet: bij een fout zetten ze `error` in de store (getoond in de alert hieronder).
       if (isRegister) {
-        await signUp(email.trim(), password, name.trim());
+        await signUp(email.trim(), password, name.trim(), { newsletter });
         // E-mailbevestiging nodig: naar 'Inloggen' met het adres ingevuld, de melding blijft staan.
         if (useAuth.getState().notice) {
           setMode('login');
@@ -223,6 +224,21 @@ export default function LoginPage() {
                 </button>
               }
             />
+
+            {isRegister && (
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-surface-3 px-4 py-3">
+                <input
+                  type="checkbox"
+                  checked={newsletter}
+                  onChange={(e) => setNewsletter(e.target.checked)}
+                  className="mt-0.5 h-5 w-5 shrink-0 accent-brand"
+                />
+                <span className="text-sm">
+                  <span className="font-medium">Ja, ik wil de nieuwsbrief van Vos Oss Motoren ontvangen.</span>
+                  <span className="block text-muted">Nieuws, acties en evenementen. Afmelden kan altijd via de link in de mail.</span>
+                </span>
+              </label>
+            )}
 
             {(error || linkErrorText) && (
               <div role="alert" className="flex items-start gap-2 rounded-xl border border-danger/40 bg-danger/15 px-4 py-3 text-sm text-danger">

@@ -24,12 +24,16 @@ create table if not exists public.navimoto_profiles (
   map_style      text not null default 'light' check (map_style in ('light', 'osm', 'topo', 'cyclosm')),
   simulate_rides boolean not null default false,
   home           jsonb,                              -- thuislocatie { lat, lon, name? } of null (niet ingesteld)
+  newsletter_opt_in    boolean not null default false, -- Vos Oss-nieuwsbrief (Brevo-lijst Klanten, via edge function navimoto-newsletter)
+  newsletter_synced_at timestamptz,                    -- laatste keer dat de keuze naar Brevo is doorgezet
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now()
 );
 
 -- Toegevoegd na de eerste migratie (kolom bestaat al in het Supabase-project):
 alter table public.navimoto_profiles add column if not exists home jsonb;
+alter table public.navimoto_profiles add column if not exists newsletter_opt_in boolean not null default false;
+alter table public.navimoto_profiles add column if not exists newsletter_synced_at timestamptz;
 
 -- ----------------------------------------------------------------------------
 -- navimoto_routes: geplande routes, rondritten en GPX-imports

@@ -3,7 +3,7 @@
 import { db, storageGet, storageRemove, storageSet, type LocalUser } from '@/services/db';
 import { newId } from '@/lib/geo';
 import type { AuthUser } from '@/types';
-import { AuthError, type AuthProvider } from './types';
+import { AuthError, type AuthProvider, type SignUpOptions } from './types';
 
 export const SESSION_KEY = 'session';
 export const PBKDF2_ITERATIONS = 100_000;
@@ -116,7 +116,7 @@ export class LocalAuthProvider implements AuthProvider {
     return toAuthUser(user);
   }
 
-  async signUp(email: string, password: string, displayName: string): Promise<AuthUser> {
+  async signUp(email: string, password: string, displayName: string, _options?: SignUpOptions): Promise<AuthUser> {
     const normalized = normalizeEmail(email);
     if (!EMAIL_RE.test(normalized)) throw new AuthError('invalid_email');
     if (password.length < MIN_PASSWORD_LENGTH) throw new AuthError('weak_password');

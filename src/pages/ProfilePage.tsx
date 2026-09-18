@@ -39,7 +39,7 @@ export default function ProfilePage() {
   const signOut = useAuth((s) => s.signOut);
   const profile = useSettings((s) => s.profile);
   const update = useSettings((s) => s.update);
-  const [pending, setPending] = useState<'signOut' | 'createAccount' | 'update' | null>(null);
+  const [pending, setPending] = useState<'signOut' | 'createAccount' | 'update' | 'newsletter' | null>(null);
 
   /** Bewaart een profielwijziging (optimistisch via useSettings.update); geeft true terug als het gelukt is. */
   const save = useCallback(
@@ -83,6 +83,20 @@ export default function ProfilePage() {
 
   const setAvoid = (key: keyof AvoidOptions, checked: boolean) => {
     void save({ defaultAvoid: { ...profile.defaultAvoid, [key]: checked } });
+  };
+
+  const handleNewsletter = async (optIn: boolean) => {
+    if (pending) return;
+    setPending('newsletter');
+    try {
+      await useSettings.getState().setNewsletter(optIn);
+      useToast.getState().show(optIn ? 'Aangemeld voor de nieuwsbrief' : 'Afgemeld voor de nieuwsbrief', { type: 'success' });
+    } catch (err) {
+      console.error('Nieuwsbrief wijzigen mislukt', err);
+      useToast.getState().show(err instanceof Error ? err.message : 'Nieuwsbrief wijzigen is mislukt.', { type: 'error' });
+    } finally {
+      setPending(null);
+    }
   };
 
   const handleUpdate = async () => {
@@ -135,6 +149,21 @@ export default function ProfilePage() {
           onCreateAccount={() => void handleCreateAccount()}
           creatingAccount={pending === 'createAccount'}
         />
+        {!user.isGuest && (
+          <div className="mt-3 border-t border-line pt-1">
+            <Toggle
+              label="Nieuwsbrief van Vos Oss Motoren"
+              description={
+                profile.newsletterOptIn
+                  ? 'Je ontvangt nieuws, acties en evenementen per e-mail.'
+                  : 'Ontvang nieuws, acties en evenementen per e-mail.'
+              }
+              checked={profile.newsletterOptIn}
+              disabled={pending === 'newsletter'}
+              onChange={(optIn) => void handleNewsletter(optIn)}
+            />
+          </div>
+        )}
       </Section>
 
       <Section title="Wat voor rijder ben je?">

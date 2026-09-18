@@ -35,6 +35,8 @@ interface ProfileRow {
   map_style: MapStyleId;
   simulate_rides: boolean;
   home: Waypoint | null; // jsonb { lat, lon, name? } of null
+  newsletter_opt_in?: boolean;
+  newsletter_synced_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -85,6 +87,8 @@ export function profileToRow(p: UserProfile): ProfileRow {
     map_style: p.mapStyle,
     simulate_rides: p.simulateRides,
     home: p.home ?? null,
+    newsletter_opt_in: p.newsletterOptIn,
+    newsletter_synced_at: p.newsletterSyncedAt === null ? null : toIso(p.newsletterSyncedAt),
     created_at: toIso(p.createdAt),
     updated_at: toIso(p.updatedAt),
   };
@@ -110,6 +114,8 @@ export function rowToProfile(r: ProfileRow): UserProfile {
     mapStyle: r.map_style ?? 'light',
     simulateRides: r.simulate_rides ?? false,
     home: rowToHome(r.home),
+    newsletterOptIn: r.newsletter_opt_in === true,
+    newsletterSyncedAt: r.newsletter_synced_at ? fromIso(r.newsletter_synced_at) : null,
     createdAt: fromIso(r.created_at, Date.now()),
     updatedAt: fromIso(r.updated_at, Date.now()),
   };

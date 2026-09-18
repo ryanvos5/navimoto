@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { db } from '@/services/db';
 import * as cloud from '@/services/cloud';
+import { setNewsletterSubscription } from '@/services/newsletter';
 import { defaultProfile, type AuthUser, type UserProfile } from '@/types';
 
 export interface SettingsState {
@@ -9,6 +10,8 @@ export interface SettingsState {
   load(user: AuthUser): Promise<void>;
   /** Past het profiel aan en bewaart het. */
   update(patch: Partial<UserProfile>): Promise<void>;
+  /** Meldt de gebruiker aan/af voor de Vos Oss-nieuwsbrief (Brevo) en bewaart de keuze. Gooit bij een fout. */
+  setNewsletter(optIn: boolean): Promise<void>;
   clear(): void;
 }
 
@@ -61,6 +64,21 @@ export const useSettings = create<SettingsState>((set, get) => ({
     if (cloudOk && (!remote || profile.updatedAt > remote.updatedAt)) {
       cloud.background('profiel opslaan', () => cloud.pushProfile(profile));
     }
+
+    // Bij registratie aangevinkt maar nog niet naar Brevo gestuurd (pas mogelijk na e-mailbevestiging + inloggen).
+    if (cloudOk && user.newsletterOptIn && !profile.newsletterSyncedAt) {
+      cloud.background('nieuwsbrief aanmelden', async () => {
+        await setNewsletterSubscription('subscribe', profile.displayName);
+        await get().update({ newsletterOptIn: true, newsletterSyncedAt: Date.now() });
+      });
+    }
+  },
+
+  async setNewsletter(optIn) {
+    const current = get().profile;
+    if (!current) return;
+    await setNewsletterSubscription(optIn ? 'subscribe' : 'unsubscribe', current.displayName);
+    await get().update({ newsletterOptIn: optIn, newsletterSyncedAt: Date.now() });
   },
 
   async update(patch) {

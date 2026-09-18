@@ -2,6 +2,11 @@ import type { AuthUser } from '@/types';
 
 export type AuthProviderName = 'local' | 'supabase';
 
+export interface SignUpOptions {
+  /** Aanmelden voor de Vos Oss-nieuwsbrief (wordt na bevestiging naar Brevo gestuurd). */
+  newsletter?: boolean;
+}
+
 export type AuthErrorCode =
   | 'invalid_credentials'
   | 'email_in_use'
@@ -35,7 +40,7 @@ export class AuthError extends Error {
 export interface AuthProvider {
   readonly name: AuthProviderName;
   getSession(): Promise<AuthUser | null>;
-  signUp(email: string, password: string, displayName: string): Promise<AuthUser>;
+  signUp(email: string, password: string, displayName: string, options?: SignUpOptions): Promise<AuthUser>;
   signIn(email: string, password: string): Promise<AuthUser>;
   signOut(): Promise<void>;
   /** Meldt wijzigingen van de ingelogde gebruiker; geeft een unsubscribe-functie terug. */
