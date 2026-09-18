@@ -14,7 +14,7 @@ import {
 import type { Feature, LineString } from 'geojson';
 import { Compass } from 'lucide-react';
 import type { GeoPosition, LatLng, MapStyleId } from '@/types';
-import { boundsOf, destinationPoint } from '@/lib/geo';
+import { angleDiff, boundsOf, destinationPoint } from '@/lib/geo';
 
 export interface MapRouteLayer {
   id: string;
@@ -139,6 +139,9 @@ const DEFAULT_FOLLOW_PITCH = 45;
 const FIT_MAX_ZOOM = 15;
 const FIT_DURATION_MS = 600;
 const FOLLOW_DURATION_MS = 900;
+/** Markeranimatie tussen twee GPS-fixes: begrensd zodat trage of snelle fixes niet raar ogen. */
+const MIN_MOVE_ANIM_MS = 250;
+const MAX_MOVE_ANIM_MS = 1500;
 const LONG_PRESS_MS = 500;
 const LONG_PRESS_MOVE_PX = 8;
 const DEFAULT_ROUTE_COLOR = '#e2131d';
@@ -367,6 +370,11 @@ export default function MapView(props: MapViewProps) {
   const [rotated, setRotated] = useState(false);
   /** Telt op na een volledige stijlwissel (vectorstijl), zodat routelagen opnieuw worden toegevoegd. */
   const [styleGen, setStyleGen] = useState(0);
+  // Vloeiende positie-animatie: wat er nu getoond wordt, wanneer de vorige fix kwam en de lopende animatie.
+  const shown = useRef<{ lat: number; lon: number; heading: number | null } | null>(null);
+  const lastFixAt = useRef<number | null>(null);
+  const moveRaf = useRef<number | null>(null);
+  const moveAnimMs = useRef(0);
 
   // Nieuwste props/callbacks voor de MapLibre-handlers (die maar één keer worden geregistreerd).
   const latest = useRef(props);
@@ -500,6 +508,10 @@ export default function MapView(props: MapViewProps) {
       el.removeEventListener('contextmenu', onContextMenu);
       appliedRoutes.current.clear();
       appliedMarkers.current.clear();
+      if (moveRaf.current !== null) cancelAnimationFrame(moveRaf.current);
+      moveRaf.current = null;
+      shown.current = null;
+      lastFixAt.current = null;
       userRef.current = null;
       wasFollowing.current = false;
       mapRef.current = null;
@@ -676,6 +688,10 @@ export default function MapView(props: MapViewProps) {
     const map = mapRef.current;
     if (!map || !ready) return;
     if (!userPosition) {
+      if (moveRaf.current !== null) cancelAnimationFrame(moveRaf.current);
+      moveRaf.current = null;
+      shown.current = null;
+      lastFixAt.current = null;
       if (userRef.current) {
         userRef.current.ground.remove();
         userRef.current.dot.remove();
@@ -684,6 +700,7 @@ export default function MapView(props: MapViewProps) {
       return;
     }
     let u = userRef.current;
+    const now = performance.now();
     if (!u) {
       const els = createUserElements();
       const ground = new Marker({ element: els.ground, anchor: 'center', rotationAlignment: 'map', pitchAlignment: 'map' });
@@ -692,17 +709,40 @@ export default function MapView(props: MapViewProps) {
       userRef.current = u;
       ground.setLngLat(toLngLat(userPosition)).addTo(map);
       dot.setLngLat(toLngLat(userPosition)).addTo(map);
+      shown.current = { lat: userPosition.lat, lon: userPosition.lon, heading: userPosition.headingDeg };
+      if (userPosition.headingDeg !== null) ground.setRotation(userPosition.headingDeg);
     } else {
-      u.ground.setLngLat(toLngLat(userPosition));
-      u.dot.setLngLat(toLngLat(userPosition));
+      // Vloeiend van de getoonde naar de nieuwe positie bewegen, in de tijd tussen twee GPS-fixes
+      // (i.p.v. per fix een sprong). Koers via de kortste draairichting.
+      const interval = lastFixAt.current === null ? 0 : now - lastFixAt.current;
+      const duration = Math.min(MAX_MOVE_ANIM_MS, Math.max(MIN_MOVE_ANIM_MS, interval));
+      moveAnimMs.current = duration;
+      const from = shown.current ?? { lat: userPosition.lat, lon: userPosition.lon, heading: userPosition.headingDeg };
+      const to = { lat: userPosition.lat, lon: userPosition.lon, heading: userPosition.headingDeg };
+      if (moveRaf.current !== null) cancelAnimationFrame(moveRaf.current);
+      const marker = u;
+      const startedAt = now;
+      const step = (t: number): void => {
+        const k = duration > 0 ? Math.min(1, (t - startedAt) / duration) : 1;
+        const lat = from.lat + (to.lat - from.lat) * k;
+        const lon = from.lon + (to.lon - from.lon) * k;
+        let heading = to.heading;
+        if (from.heading !== null && to.heading !== null) heading = from.heading + angleDiff(from.heading, to.heading) * k;
+        marker.ground.setLngLat([lon, lat]);
+        marker.dot.setLngLat([lon, lat]);
+        if (heading !== null) marker.ground.setRotation(heading);
+        shown.current = { lat, lon, heading };
+        moveRaf.current = k < 1 ? requestAnimationFrame(step) : null;
+      };
+      moveRaf.current = requestAnimationFrame(step);
     }
+    lastFixAt.current = now;
     const arrowMode = userMarker === 'arrow';
     const r = accuracyRadiusPx(map, userPosition, userPosition.accuracyM);
     u.els.halo.style.width = `${r * 2}px`;
     u.els.halo.style.height = `${r * 2}px`;
     u.els.halo.style.display = arrowMode ? 'none' : 'block';
     u.els.dot.style.display = arrowMode ? 'none' : 'block';
-    if (userPosition.headingDeg !== null) u.ground.setRotation(userPosition.headingDeg);
     // Zonder koers: stip tonen (pijl zou een willekeurige richting suggereren).
     const hasHeading = userPosition.headingDeg !== null;
     u.els.cone.style.display = !arrowMode && hasHeading ? 'block' : 'none';
@@ -726,7 +766,8 @@ export default function MapView(props: MapViewProps) {
       zoom: followZoom ?? DEFAULT_FOLLOW_ZOOM,
     };
     if (!wasFollowing.current) map.jumpTo(target);
-    else map.easeTo({ ...target, duration: FOLLOW_DURATION_MS });
+    // Lineair en even lang als de markeranimatie: camera en pijl bewegen dan gelijk op, zonder haperen.
+    else map.easeTo({ ...target, duration: moveAnimMs.current || FOLLOW_DURATION_MS, easing: (t) => t });
     wasFollowing.current = true;
   }, [userPosition, follow, followZoom, followPitch, ready]);
 
